@@ -2,13 +2,13 @@ import streamlit as st
 import base64
 import os
 
-# 1. Page Config
 st.set_page_config(
-    page_title="M-FLO | Cardiology Workspace", 
+    page_title="M-FLO | Workspace", 
     page_icon="⚕️", 
     layout="wide"
 )
 
+# --- LOGO LOADING ---
 def get_base64(file_path):
     if os.path.exists(file_path):
         with open(file_path, "rb") as f:
@@ -23,72 +23,56 @@ if "auth" not in st.session_state:
 if "current_page" not in st.session_state:
     st.session_state.current_page = "Homepage"
 
-# --- ADVANCED UI STYLING (Matching your Screenshot) ---
+# --- UPDATED CSS FOR CENTERED SEARCH ---
 st.markdown(f"""
     <style>
-    /* Background Gradient */
-    .stApp {{
-        background: #F8F9FA !important;
+    .stApp {{ background: #F8F9FA !important; }}
+
+    /* TOP BAR VERTICAL ALIGNMENT */
+    div[data-testid="column"] {{
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }}
 
-    /* FIXED TOP BAR */
-    div[data-testid="stHeader"] {{
-        height: 100px !important;
-        background-color: rgba(255, 255, 255, 0.95) !important;
-        backdrop-filter: blur(15px);
-        border-bottom: 1px solid #E0E0E0;
-        z-index: 999999 !important;
+    /* CENTERED SEARCH BAR TEXT */
+    .stTextInput > div > div > input {{
+        height: 65px !important;
+        font-size: 20px !important;
+        border-radius: 20px !important;
+        border: 1.5px solid #E0E0E0 !important;
+        background-color: #F9F9F9 !important;
+        
+        /* THE MAGIC LINES FOR CENTERING */
+        text-align: center !important; 
     }}
 
-    /* SIDEBAR STYLING - Split Menu Look */
-    section[data-testid="stSidebar"] {{
-        width: 380px !important;
-        background-color: #FFFFFF !important;
-        border-right: 1px solid #EAEAEA !important;
-    }}
-    
-    .sidebar-section-label {{
+    /* SIDEBAR SECTION LABELS */
+    .sidebar-label {{
         color: #ADADAD;
         font-size: 14px;
-        font-weight: 600;
-        margin: 20px 0 10px 20px;
+        font-weight: 700;
+        margin: 25px 0 10px 20px;
         text-transform: uppercase;
+        letter-spacing: 1px;
     }}
 
-    /* TOP BAR SEARCH */
-    .stTextInput > div > div > input {{
-        height: 60px !important;
-        font-size: 18px !important;
-        border-radius: 15px !important;
-        border: 1.5px solid #F0F0F0 !important;
-        background-color: #F9F9F9 !important;
-    }}
-
-    /* DASHBOARD CARDS (Glassmorphism) */
+    /* BIG DASHBOARD CARDS */
     div[data-testid="stVerticalBlockBorderWrapper"] {{
         background: white !important;
-        border-radius: 30px !important;
-        padding: 30px !important;
-        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.03) !important;
+        border-radius: 40px !important;
+        padding: 40px !important;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.04) !important;
         border: 1px solid #F0F0F0 !important;
     }}
-
-    /* ACCENT COLORS (Pistachio Green) */
-    .stButton > button {{
-        border-radius: 15px !important;
-        font-weight: 600 !important;
-        transition: all 0.3s ease;
-    }}
     
-    .stButton > button:hover {{
-        border-color: #93C572 !important;
-        color: #93C572 !important;
-    }}
-
-    /* Selected Page Highlight */
-    .active-nav {{
-        background-color: #124D41 !important;
-        color: white !important;
+    /* BIG SIDEBAR BUTTONS */
+    section[data-testid="stSidebar"] {{ width: 380px !important; }}
+    .stButton > button {{
+        height: 65px !important;
+        font-size: 22px !important;
+        border-radius: 18px !important;
+        font-weight: 700 !important;
     }}
     </style>
     """, unsafe_allow_html=True)
@@ -109,32 +93,33 @@ if not st.session_state.auth:
                 st.rerun()
 else:
     # --- TOP BAR ---
-    t_space, t_search, t_user = st.columns([1, 3, 2])
-    with t_search:
-        search_val = st.text_input("search_input", placeholder="🔍 Search clinical functions...", label_visibility="collapsed", key="top_search")
+    # Using 3 columns to force the search bar into the exact center
+    t1, t2, t3 = st.columns([1.5, 3, 1.5])
+    
+    with t2:
+        search_val = st.text_input("search_input", placeholder="Search patients, messages, community...", label_visibility="collapsed", key="top_search")
         if search_val:
-            pages = ["Homepage", "Messages", "Patients", "Reservation", "Community"]
+            pages = ["Homepage", "Patients", "Reservation", "Messages", "Community", "Statistics"]
             for p in pages:
                 if search_val.lower() in p.lower():
                     st.session_state.current_page = p
-    with t_user:
-        st.markdown(f"<div style='text-align:right; color:#124D41; font-size:22px; font-weight:700; padding-top:15px;'>Hello, {user_name}</div>", unsafe_allow_html=True)
 
-    # --- SIDEBAR (Modular Look) ---
+    with t3:
+        st.markdown(f"<div style='text-align:right; color:#124D41; font-size:24px; font-weight:700;'>Hello, {user_name}</div>", unsafe_allow_html=True)
+
+    # --- SIDEBAR ---
     with st.sidebar:
-        # LOGO TOP LEFT
         if logo_b64:
-            st.image(f"data:image/png;base64,{logo_b64}", width=180)
+            st.image(f"data:image/png;base64,{logo_b64}", use_container_width=True)
         else:
-            st.markdown("<h2 style='color:#124D41; padding-left:15px;'>M-FLO</h2>", unsafe_allow_html=True)
+            st.markdown("<h1 style='color:#124D41; padding-left:20px;'>M-FLO</h1>", unsafe_allow_html=True)
         
-        st.markdown('<p class="sidebar-section-label">Menu</p>', unsafe_allow_html=True)
+        st.markdown('<p class="sidebar-label">Main Menu</p>', unsafe_allow_html=True)
         if st.button("📊 Homepage", use_container_width=True): st.session_state.current_page = "Homepage"
         if st.button("👥 Patients", use_container_width=True): st.session_state.current_page = "Patients"
         if st.button("📅 Reservation", use_container_width=True): st.session_state.current_page = "Reservation"
-        if st.button("💬 Messages", use_container_width=True): st.session_state.current_page = "Messages"
-
-        st.markdown('<p class="sidebar-section-label">Community & Tools</p>', unsafe_allow_html=True)
+        
+        st.markdown('<p class="sidebar-label">Analytics</p>', unsafe_allow_html=True)
         if st.button("🤝 Community", use_container_width=True): st.session_state.current_page = "Community"
         if st.button("📈 Statistics", use_container_width=True): st.session_state.current_page = "Statistics"
         
@@ -143,36 +128,10 @@ else:
             st.session_state.auth = False
             st.rerun()
 
-    # --- CONTENT AREA: Cardiology Dashboard Look ---
+    # --- CONTENT ---
     st.markdown(f"## {st.session_state.current_page} Overview")
     
     if st.session_state.current_page == "Homepage":
-        col_main, col_side = st.columns([2.5, 1], gap="medium")
-        
-        with col_main:
-            # Cardiac Visualization Placeholder
-            with st.container(border=True):
-                st.markdown("### **Heart Performance Analysis**")
-                st.caption("Finished analyzing: Real-time telemetry active")
-                # Simulated Chart
-                st.line_chart({"Heart Rate": [72, 75, 71, 78, 82, 74, 76]})
-            
-            with st.container(border=True):
-                st.markdown("### **Blood Metrics**")
-                c1, c2, c3 = st.columns(3)
-                c1.metric("Blood Status", "112/75", "Normal")
-                c2.metric("Glucose Level", "230/ml", "+2%")
-                c3.metric("Blood Count", "80-90", "-5%")
-
-        with col_side:
-            with st.container(border=True):
-                st.markdown("### **My Schedule**")
-                st.write("**Dr. Allison Joy** - 09:30 AM")
-                st.write("**Dr. Ellina Roy** - 11:00 AM")
-                st.button("View Full Calendar", use_container_width=True)
-
-    elif st.session_state.current_page == "Community":
-        st.markdown("### **Doctor Forum**")
         with st.container(border=True):
-            st.write("**u/Cardio_Lead:** Thoughts on new M-FLO v2.1 beta?")
-            st.button("🔼 Upvote (254)")
+            st.markdown("### Heart Rate Performance")
+            st.line_chart({"bpm": [70, 72, 85, 78, 74, 80, 72]})
