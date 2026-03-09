@@ -2,7 +2,7 @@ import streamlit as st
 import base64
 import os
 import requests
-from datetime import date
+from datetime import date, datetime
 
 # 1. PAGE SETUP
 st.set_page_config(
@@ -88,25 +88,19 @@ if "completed_counts" not in st.session_state:
 # 5. CSS (PRESERVED + GHOST ICON FIX)
 st.markdown(f"""
     <style>
-    /* PREVIOUS: [data-testid="stHeader"] {{ display: none; }} */
-    /* NEW: Makes the bar invisible but keeps the icon button functional */
     [data-testid="stHeader"] {{ 
         background: rgba(0,0,0,0) !important; 
         color: #124D41 !important;
     }}
-    
-    /* Ensures the specific arrow button is visible and clickable */
     [data-testid="stHeader"] button {{
         background-color: white !important;
         border-radius: 50% !important;
         box-shadow: 0 2px 5px rgba(0,0,0,0.1) !important;
         margin-left: 10px !important;
     }}
-
     [data-testid="stAppViewContainer"] {{
         background: radial-gradient(circle at top right, #F9FFF9, #FDFDFD) !important;
     }}
-    
     .stat-box {{ 
         background: #F1F8E9; 
         border-radius: 20px; padding: 20px; text-align: center; border: 1px solid #E1EDD8;
@@ -114,17 +108,15 @@ st.markdown(f"""
     }}
     .stat-val {{ font-size: 24px; font-weight: 800; color: #124D41; margin: 0; }}
     .stat-lbl {{ font-size: 12px; color: #666; text-transform: uppercase; margin: 0; }}
-    
     .profile-card {{ 
         background: white; padding: 40px; border-radius: 35px; border: 1px solid #E0E0E0; 
         box-shadow: 0 15px 50px rgba(0,0,0,0.05); margin-top: 10px;
     }}
-    .profile-img {{ width: 140px; height: 140px; border-radius: 30px; object-fit: cover; border: 4px solid #93C572; box-shadow: 0 8px 20px rgba(147, 197, 114, 0.2); }}
+    .profile-img {{ width: 140px; height: 140px; border-radius: 30px; object-fit: cover; border: 4px solid #93C572; }}
     .cert-tag {{ background: #E8F5E9; color: #2E7D32; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 600; margin: 4px; display: inline-block; border: 1px solid #C8E6C9; }}
     .mini-stat {{ text-align: center; padding: 10px; }}
     .mini-stat-val {{ font-size: 18px; font-weight: 700; color: #124D41; display: block; }}
     .mini-stat-lbl {{ font-size: 10px; color: #888; text-transform: uppercase; }}
-    
     .alert-card {{ background: #FFF5F5; border-left: 5px solid #E57373; padding: 15px; border-radius: 12px; margin-bottom: 10px; }}
     .todo-item {{ background:#F1F8E9; padding:12px; border-radius:12px; border-left:5px solid #93C572; margin-bottom:10px; }}
     </style>
@@ -143,6 +135,15 @@ if not st.session_state.auth:
             if u == "doctor1" and p == "mediflow2026":
                 st.session_state.auth = True; st.rerun()
 else:
+    # --- LOGIC TO FETCH DYNAMIC STATS FROM CALENDAR ---
+    # This checks for events scheduled for the current date
+    today_str = date.today().strftime("%Y-%m-%d")
+    current_tasks = st.session_state.daily_tasks.get(today_str, [])
+    
+    # Counting logic: looks for "Patient" or "Surgery" in the daily tasks/calendar items
+    count_patients = sum(1 for task in current_tasks if "patient" in task.lower())
+    count_surgeries = sum(1 for task in current_tasks if "surgery" in task.lower())
+
     # SIDEBAR
     with st.sidebar:
         if logo_b64: st.image(f"data:image/png;base64,{logo_b64}", use_container_width=True)
@@ -158,10 +159,10 @@ else:
     if st.session_state.current_page == "Homepage":
         st.markdown(f'<p style="color:#124D41; font-weight:700; font-size:18px;">Hello, {user_name} 👋</p>', unsafe_allow_html=True)
 
-        # STATS ROW
+        # UPDATED STATS ROW (LINKED TO CALENDAR/TASKS)
         s1, s2, s3, s4 = st.columns(4)
-        with s1: st.markdown('<div class="stat-box"><p class="stat-lbl">Patients Today</p><p class="stat-val">12</p></div>', unsafe_allow_html=True)
-        with s2: st.markdown('<div class="stat-box"><p class="stat-lbl">Surgeries</p><p class="stat-val">02</p></div>', unsafe_allow_html=True)
+        with s1: st.markdown(f'<div class="stat-box"><p class="stat-lbl">Patients Today</p><p class="stat-val">{count_patients:02d}</p></div>', unsafe_allow_html=True)
+        with s2: st.markdown(f'<div class="stat-box"><p class="stat-lbl">Surgeries</p><p class="stat-val">{count_surgeries:02d}</p></div>', unsafe_allow_html=True)
         with s3:
             alert_count = len(st.session_state.urgent_patients)
             color = "#E57373" if alert_count > 0 else "#93C572"
@@ -170,7 +171,7 @@ else:
                 st.session_state.show_alerts = not st.session_state.show_alerts; st.rerun()
         with s4: st.markdown('<div class="stat-box"><p class="stat-lbl">System Health</p><p class="stat-val">98%</p></div>', unsafe_allow_html=True)
         
-        # URGENT ALERTS (PRESERVED)
+        # REST OF THE CODE (PRESERVED)
         if st.session_state.show_alerts:
             st.markdown("#### 🚨 Active Urgent Cases")
             if not st.session_state.urgent_patients: st.success("All clear!")
@@ -183,13 +184,11 @@ else:
                             st.session_state.urgent_patients.pop(idx); st.rerun()
             st.divider()
 
-        # PROFILE & PLANNING
         col_main, col_plan = st.columns([2.2, 1], gap="large")
         with col_main:
             img_html = f'<img src="data:image/png;base64,{doctor_b64}" class="profile-img">' if doctor_b64 else '👨‍⚕️'
             stats_html = "".join([f'<div class="mini-stat"><span class="mini-stat-val">{s["value"]}</span><span class="mini-stat-lbl">{s["label"]}</span></div>' for s in DOCTOR_BIO['stats']])
             certs_html = "".join([f'<span class="cert-tag">{c}</span>' for c in DOCTOR_BIO['certs']])
-
             st.markdown(f"""
                 <div class="profile-card">
                     <div style="display:flex; align-items:flex-start; gap:35px;">
@@ -218,7 +217,6 @@ else:
             new_task = st.text_input("Add task", key=f"input_{selected_date}")
             if st.button("Add", key=f"btn_{selected_date}"):
                 if new_task: st.session_state.daily_tasks[selected_date].append(new_task); st.rerun()
-
             curr_tasks = st.session_state.daily_tasks[selected_date]
             comp_count = st.session_state.completed_counts[selected_date]
             total = len(curr_tasks) + comp_count
