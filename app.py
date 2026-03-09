@@ -38,12 +38,12 @@ if "current_page" not in st.session_state:
 if "active_chat" not in st.session_state:
     st.session_state.active_chat = list(MESSAGES_DB.keys())[0]
 
-# 4. ENHANCED ANIMATION & COLOR THEME CSS
+# 4. COLOR THEME & ANIMATION CSS
 st.markdown("""
     <style>
-    /* SOFT THEME BACKGROUND */
+    /* RADIAL GRADIENT BACKGROUND */
     .stApp {
-        background: radial-gradient(circle at top right, #F9FFF9, #FDFDFD) !important;
+        background: radial-gradient(circle at top right, #F4FAF4, #FFFFFF) !important;
     }
 
     html, body, [class*="css"] {
@@ -52,21 +52,15 @@ st.markdown("""
         color: #124D41;
     }
 
-    /* KEYFRAMES FOR MOTIONS */
+    /* ANIMATION KEYFRAMES */
     @keyframes fadeInUp {
-        from { opacity: 0; transform: translateY(20px); }
+        from { opacity: 0; transform: translateY(15px); }
         to { opacity: 1; transform: translateY(0); }
     }
 
-    @keyframes buttonPop {
-        0% { transform: scale(1); }
-        50% { transform: scale(0.98); }
-        100% { transform: scale(1); }
-    }
+    .page-transition { animation: fadeInUp 0.4s ease-out forwards; }
 
-    .page-transition { animation: fadeInUp 0.5s ease-out forwards; }
-
-    /* SEARCH BAR FIX: NO CLIPPING */
+    /* SEARCH BAR FIX: PERFECT CENTERING */
     .stTextInput > div > div {
         display: flex !important;
         align-items: center !important;
@@ -74,7 +68,7 @@ st.markdown("""
         background-color: #FFFFFF !important;
         border-radius: 12px !important;
         border: 1.5px solid #E0E0E0 !important;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+        transition: border-color 0.3s ease;
     }
 
     .stTextInput > div > div > input {
@@ -87,7 +81,7 @@ st.markdown("""
         border: none !important;
     }
 
-    /* LOGIN PAGE DESIGN (PRESERVED) */
+    /* LOGIN PAGE PRESERVED DESIGN */
     .login-card {
         border: 6px solid #93C572; 
         border-radius: 80px; 
@@ -96,15 +90,13 @@ st.markdown("""
         text-align: center; 
         max-width: 900px; 
         margin: auto;
-        box-shadow: 0 20px 50px rgba(147, 197, 114, 0.15);
+        box-shadow: 0 20px 60px rgba(147, 197, 114, 0.12);
     }
 
-    /* BUTTON MOTIONS */
+    /* BUTTON MOTIONS (SPRING EFFECT) */
     .stButton > button {
         height: 48px !important;
         border-radius: 10px !important;
-        text-align: left !important;
-        padding-left: 15px !important;
         transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
         background-color: white !important;
         border: 1px solid #EEE !important;
@@ -113,23 +105,21 @@ st.markdown("""
     .stButton > button:hover {
         border-color: #93C572 !important;
         color: #93C572 !important;
-        background-color: #F9FFF9 !important;
-        transform: translateY(-2px) scale(1.02) !important;
-        box-shadow: 0 5px 15px rgba(147, 197, 114, 0.1) !important;
+        transform: translateY(-3px) scale(1.02) !important;
+        box-shadow: 0 8px 15px rgba(147, 197, 114, 0.1) !important;
     }
 
     .stButton > button:active {
-        transform: scale(0.95) !important;
+        transform: scale(0.96) !important;
     }
 
     /* SIDEBAR */
     section[data-testid="stSidebar"] { 
         width: 320px !important; 
         background-color: white !important;
-        border-right: 1px solid #F0F0F0;
     }
 
-    /* CARDS */
+    /* DASHBOARD CARDS */
     div[data-testid="stVerticalBlockBorderWrapper"] {
         border-radius: 20px !important;
         padding: 30px !important;
@@ -159,7 +149,7 @@ if not st.session_state.auth:
     logo_html = f'<img src="data:image/png;base64,{logo_b64}" style="width:300px;">' if logo_b64 else ""
     
     st.markdown(f"""
-        <div class="login-card">
+        <div class="login-card page-transition">
             {logo_html}
             <div style="color: #93C572; font-weight: 800; font-size: 35px; margin-top: 20px;">67+2 PODCAST</div>
             <div style="color: #124D41; font-size: 100px; font-weight: 900; margin: 0; letter-spacing: -5px;">M-FLO</div>
@@ -175,7 +165,7 @@ if not st.session_state.auth:
                 st.session_state.auth = True
                 st.rerun()
 else:
-    # --- TOP NAV & SEARCH ---
+    # --- DASHBOARD TOP NAV ---
     t1, t2, t3 = st.columns([1, 2, 1])
     with t2:
         sq = st.text_input("search", placeholder="Search functions...", label_visibility="collapsed", key="g_search")
@@ -191,7 +181,7 @@ else:
     with t3:
         st.markdown(f"<p style='text-align:right; font-weight:700; padding-top:10px;'>Hello, {user_name}</p>", unsafe_allow_html=True)
 
-    # --- SIDEBAR (ANIMATED BUTTONS) ---
+    # --- SIDEBAR (ANIMATED) ---
     with st.sidebar:
         if logo_b64: st.image(f"data:image/png;base64,{logo_b64}", use_container_width=True)
         st.markdown("<br>", unsafe_allow_html=True)
@@ -204,7 +194,7 @@ else:
             st.session_state.auth = False
             st.rerun()
 
-    # --- CONTENT AREA (WITH TRANSITION ANIMATION) ---
+    # --- CONTENT AREA (WITH TRANSITION) ---
     st.markdown('<div class="page-transition">', unsafe_allow_html=True)
     st.markdown(f"<h1>{st.session_state.current_page}</h1>", unsafe_allow_html=True)
 
@@ -221,7 +211,7 @@ else:
                 for msg in MESSAGES_DB[st.session_state.active_chat]:
                     st.markdown(f'<div style="background:#F1F8F1; padding:12px; border-radius:10px; margin-bottom:8px; border:1px solid #EEE;">{msg}</div>', unsafe_allow_html=True)
             st.text_input("Reply...", key="chat_in", label_visibility="collapsed")
-            st.button("Send Message ➔")
+            st.button("Send ➔")
 
     elif st.session_state.current_page == "Homepage":
         with st.container(border=True):
