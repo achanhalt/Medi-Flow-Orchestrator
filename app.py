@@ -21,15 +21,27 @@ st.markdown(f"""
     <style>
     .stApp {{ background-color: #FFFFFF !important; }}
 
-    @keyframes samsungFadeInUp {{
-        from {{ opacity: 0; transform: translateY(50px); }}
+    /* LOGIN PAGE ANIMATION */
+    @keyframes loginEntrance {{
+        from {{ opacity: 0; transform: scale(0.95); }}
+        to {{ opacity: 1; transform: scale(1); }}
+    }}
+
+    /* DASHBOARD ENTRANCE (Samsung Style) */
+    @keyframes samsungSlideUp {{
+        from {{ opacity: 0; transform: translateY(100px); }}
         to {{ opacity: 1; transform: translateY(0); }}
     }}
 
-    .animate-in {{
-        animation: samsungFadeInUp 0.9s cubic-bezier(0.165, 0.84, 0.44, 1) forwards;
+    .login-container {{
+        animation: loginEntrance 0.7s ease-out forwards;
+    }}
+
+    .dashboard-container {{
+        animation: samsungSlideUp 0.8s cubic-bezier(0.165, 0.84, 0.44, 1) forwards;
     }}
     
+    /* UI ELEMENTS */
     div[data-baseweb="input"], div[data-baseweb="textarea"] {{
         background-color: #FFFFFF !important;
         border: 2px solid #93C572 !important;
@@ -82,6 +94,8 @@ if "auth" not in st.session_state:
     st.session_state.auth = False
 
 if not st.session_state.auth:
+    # WRAP LOGIN IN ANIMATION DIV
+    st.markdown('<div class="login-container">', unsafe_allow_html=True)
     st.markdown("<br><br><br>", unsafe_allow_html=True)
     
     logo_html = f'<div style="display: flex; justify-content: center;"><img src="data:image/png;base64,{logo_b64}" style="width:280px;"></div>' if logo_b64 else ""
@@ -105,14 +119,18 @@ if not st.session_state.auth:
         
         if st.button("AUTHENTICATE SYSTEM"):
             if u == "doctor1" and p == "mediflow2026":
+                with st.spinner("Authorizing..."):
+                    time.sleep(0.8) # Critical for animation feel
                 st.session_state.auth = True
                 st.rerun()
             else:
                 st.error("Access Denied.")
-        
-        st.markdown("<p style='text-align:center; font-size:12px; color:gray; margin-top:20px;'>Auth: MD-Level Encrypted Access Only</p>", unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)
 
 else:
+    # WRAP DASHBOARD IN SLIDE-UP ANIMATION DIV
+    st.markdown('<div class="dashboard-container">', unsafe_allow_html=True)
+    
     with st.sidebar:
         if logo_b64:
             st.markdown(f'<div style="text-align:center;"><img src="data:image/png;base64,{logo_b64}" width="120"></div>', unsafe_allow_html=True)
@@ -122,8 +140,6 @@ else:
         if st.button("LOGOUT / LOCK"):
             st.session_state.auth = False
             st.rerun()
-
-    st.markdown('<div class="animate-in">', unsafe_allow_html=True)
 
     st.subheader("⚕️ Patient Consultation Environment")
     
@@ -141,9 +157,7 @@ else:
         st.markdown("#### Clinical Interface")
         notes = st.text_area("Live Transcript", height=350, placeholder="Type notes here...")
         if st.button("EXECUTE ANALYSIS"):
-            with st.spinner("Analyzing..."):
-                time.sleep(1)
-                st.toast("Intents Detected")
+            st.toast("Intents Detected")
 
     with c3:
         st.markdown("#### AI-Generated Orders")
