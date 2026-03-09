@@ -19,7 +19,8 @@ COMMUNITY_POSTS = [
 
 RESERVATIONS_DB = [
     {"Time": "09:00 AM", "Patient": "Alice Tan", "Status": "Confirmed"},
-    {"Time": "11:30 AM", "Patient": "Bob Smith", "Status": "Pending"}
+    {"Time": "11:30 AM", "Patient": "Bob Smith", "Status": "Pending"},
+    {"Time": "02:00 PM", "Patient": "Charlie Dean", "Status": "Confirmed"}
 ]
 
 MESSAGES_DB = {
@@ -55,9 +56,10 @@ st.markdown(f"""
         background: radial-gradient(circle at top right, #F9FFF9, #FDFDFD) !important;
     }}
 
-    /* CENTERED LOGIN BOX */
+    /* CENTERED LOGIN BOX LOGIC */
     .main .block-container {{
         padding: {"0" if not st.session_state.auth else "2rem"} !important;
+        margin: 0 !important;
         height: 100vh;
         display: {"flex" if not st.session_state.auth else "block"};
         align-items: center;
@@ -77,12 +79,13 @@ st.markdown(f"""
     .mflo-header {{ color: #124D41; font-size: 55px; font-weight: 900; margin: 0; letter-spacing: -3px; line-height: 1; }}
     .podcast-header {{ color: #93C572; font-weight: 800; font-size: 20px; margin-bottom: 5px; }}
 
-    /* USER GREETING TEXT */
+    /* TOP BAR GREETING */
     .user-greeting {{
         color: #124D41;
-        font-size: 18px;
+        font-size: 20px;
         font-weight: 700;
-        margin-top: 10px;
+        margin: 0;
+        padding-top: 10px;
     }}
 
     .stTextInput > div > div {{
@@ -133,8 +136,7 @@ if not st.session_state.auth:
         st.markdown('<p style="color:#93C572; font-size:10px; margin-top:10px;">Auth: MD-Level Encrypted Access Only</p>', unsafe_allow_html=True)
 
 else:
-    # --- TOP BAR WITH GREETING & SEARCH ---
-    # Column 1: Hello User | Column 2: Search Bar | Column 3: Spacer
+    # --- TOP BAR (GREETING + SEARCH) ---
     top_l, top_c, top_r = st.columns([1, 2, 1])
     
     with top_l:
@@ -149,7 +151,7 @@ else:
                     st.session_state.current_page = m['page']
                     st.rerun()
 
-    # --- SIDEBAR & NAVIGATION (PRESERVED) ---
+    # --- SIDEBAR NAVIGATION (PRESERVED) ---
     with st.sidebar:
         if logo_b64: st.image(f"data:image/png;base64,{logo_b64}", use_container_width=True)
         st.divider()
@@ -165,10 +167,13 @@ else:
 
     # Dynamic Page Loading
     st.markdown(f"<h1>{st.session_state.current_page}</h1>", unsafe_allow_html=True)
+    
     if st.session_state.current_page == "Homepage":
         st.line_chart({"bpm": [72, 75, 78, 74, 80]})
+    
     elif st.session_state.current_page == "Reservation":
-        st.write("### Patient Reservation Schedule")
+        st.write("### Upcoming Appointments")
         st.table(RESERVATIONS_DB)
+        
     elif st.session_state.current_page == "Messages":
         st.write("Messages module loaded.")
