@@ -11,7 +11,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# 2. GLOBAL DATA & VARIABLES (EXPANDED FOR A NICER LOOK)
+# 2. GLOBAL DATA & VARIABLES (EXPANDED BIO)
 user_name = "Dr. John Doe"
 GITHUB_RAW_URL = "https://raw.githubusercontent.com/your-username/your-repo/main/doctor_profile.png" 
 
@@ -21,11 +21,11 @@ DOCTOR_BIO = {
     "desc": """Dr. John Doe is a world-renowned specialist in structural heart disease with over 15 years of clinical excellence. 
     He pioneered the use of minimally invasive valve replacements at M-FLO General and currently serves as the Head of Cardiovascular Research. 
     His work focuses on integrating real-time AI monitoring with patient-centric care models.""",
-    "certs": ["MD, Harvard Medical School", "Board Certified in Cardiovascular Disease", "FACC Fellowship", "European Society of Cardiology (ESC) Member"],
+    "certs": ["MD, Harvard Medical School", "Board Certified in Cardiovascular Disease", "FACC Fellowship", "European Society of Cardiology Member"],
     "stats": [
-        {"label": "Surgeries performed", "value": "1,200+"},
-        {"label": "Research Papers", "value": "84"},
-        {"label": "Patient Rating", "value": "4.9/5"}
+        {"label": "Surgeries", "value": "1,200+"},
+        {"label": "Papers", "value": "84"},
+        {"label": "Rating", "value": "4.9/5"}
     ]
 }
 
@@ -86,13 +86,19 @@ if "daily_tasks" not in st.session_state:
 if "completed_counts" not in st.session_state:
     st.session_state.completed_counts = {}
 
-# 5. CSS (PRESERVED + ENHANCED PROFILE CARD)
+# 5. CSS (PRESERVED COLOR DESIGN + PROFILE UPGRADE)
 st.markdown(f"""
     <style>
     [data-testid="stHeader"] {{ display: none; }}
     [data-testid="stAppViewContainer"] {{
         background: radial-gradient(circle at top right, #F9FFF9, #FDFDFD) !important;
     }}
+    
+    /* YOUR ORIGINAL SIDEBAR DESIGN */
+    [data-testid="stSidebar"] {{ 
+        background-image: linear-gradient(180deg, #E8F5E9 0%, #C8E6C9 100%) !important; 
+    }}
+
     .stat-box {{ 
         background: #F1F8E9; 
         border-radius: 20px; padding: 20px; text-align: center; border: 1px solid #E1EDD8;
@@ -101,20 +107,17 @@ st.markdown(f"""
     .stat-val {{ font-size: 24px; font-weight: 800; color: #124D41; margin: 0; }}
     .stat-lbl {{ font-size: 12px; color: #666; text-transform: uppercase; margin: 0; }}
     
-    /* ENHANCED PROFILE CARD */
+    /* UPGRADED PROFILE CARD */
     .profile-card {{ 
-        background: white; 
-        padding: 40px; 
-        border-radius: 35px; 
-        border: 1px solid #E0E0E0; 
+        background: white; padding: 40px; border-radius: 35px; border: 1px solid #E0E0E0; 
         box-shadow: 0 15px 50px rgba(0,0,0,0.05);
-        margin-top: 10px;
     }}
     .profile-img {{ width: 140px; height: 140px; border-radius: 30px; object-fit: cover; border: 4px solid #93C572; box-shadow: 0 8px 20px rgba(147, 197, 114, 0.2); }}
-    .cert-tag {{ background: #E8F5E9; color: #2E7D32; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 600; margin: 4px; display: inline-block; border: 1px solid #C8E6C9; }}
-    .mini-stat {{ text-align: center; padding: 10px; }}
-    .mini-stat-val {{ font-size: 18px; font-weight: 700; color: #124D41; display: block; }}
-    .mini-stat-lbl {{ font-size: 10px; color: #888; text-transform: uppercase; }}
+    .cert-tag {{ background: #E8F5E9; color: #2E7D32; padding: 6px 14px; border-radius: 20px; font-size: 11px; font-weight: 600; margin: 4px; display: inline-block; border: 1px solid #C8E6C9; }}
+    .mini-stat {{ text-align: center; padding: 10px; border-right: 1px solid #f0f0f0; padding-right: 25px; }}
+    .mini-stat:last-child {{ border-right: none; }}
+    .mini-stat-val {{ font-size: 20px; font-weight: 700; color: #124D41; display: block; }}
+    .mini-stat-lbl {{ font-size: 10px; color: #888; text-transform: uppercase; letter-spacing: 1px; }}
     
     .alert-card {{ background: #FFF5F5; border-left: 5px solid #E57373; padding: 15px; border-radius: 12px; margin-bottom: 10px; }}
     .todo-item {{ background:#F1F8E9; padding:12px; border-radius:12px; border-left:5px solid #93C572; margin-bottom:10px; }}
@@ -134,7 +137,7 @@ if not st.session_state.auth:
             if u == "doctor1" and p == "mediflow2026":
                 st.session_state.auth = True; st.rerun()
 else:
-    # SIDEBAR
+    # SIDEBAR (PRESERVED MENU BAR COLOR)
     with st.sidebar:
         if logo_b64: st.image(f"data:image/png;base64,{logo_b64}", use_container_width=True)
         st.divider()
@@ -161,7 +164,7 @@ else:
                 st.session_state.show_alerts = not st.session_state.show_alerts; st.rerun()
         with s4: st.markdown('<div class="stat-box"><p class="stat-lbl">System Health</p><p class="stat-val">98%</p></div>', unsafe_allow_html=True)
         
-        # URGENT ALERTS LOGIC (PRESERVED)
+        # URGENT ALERTS (PRESERVED)
         if st.session_state.show_alerts:
             st.markdown("#### 🚨 Active Urgent Cases")
             if not st.session_state.urgent_patients: st.success("All clear!")
@@ -174,15 +177,11 @@ else:
                             st.session_state.urgent_patients.pop(idx); st.rerun()
             st.divider()
 
-        # --- LONGER & NICER DOCTOR PROFILE ---
-        col_main, col_plan = st.columns([2.2, 1], gap="large")
+        # PROFILE & PLANNING
+        col_main, col_plan = st.columns([2.3, 1], gap="large")
         with col_main:
             img_html = f'<img src="data:image/png;base64,{doctor_b64}" class="profile-img">' if doctor_b64 else '👨‍⚕️'
-            
-            # Generating HTML for Mini Stats
             stats_html = "".join([f'<div class="mini-stat"><span class="mini-stat-val">{s["value"]}</span><span class="mini-stat-lbl">{s["label"]}</span></div>' for s in DOCTOR_BIO['stats']])
-            
-            # Generating HTML for Cert Tags
             certs_html = "".join([f'<span class="cert-tag">{c}</span>' for c in DOCTOR_BIO['certs']])
 
             st.markdown(f"""
@@ -190,13 +189,13 @@ else:
                     <div style="display:flex; align-items:flex-start; gap:35px;">
                         {img_html}
                         <div style="flex-grow:1;">
-                            <h1 style="margin:0; color:#124D41; font-size:32px;">{user_name}</h1>
+                            <h1 style="margin:0; color:#124D41; font-size:32px; font-weight:800;">{user_name}</h1>
                             <p style="color:#93C572; font-weight:700; margin-bottom:15px; font-size:18px;">{DOCTOR_BIO['title']}</p>
-                            <div style="display:flex; gap:30px; border-top: 1px solid #f0f0f0; border-bottom: 1px solid #f0f0f0; padding: 15px 0; margin-bottom:15px;">
+                            <div style="display:flex; border-top: 1px solid #f5f5f5; border-bottom: 1px solid #f5f5f5; padding: 15px 0; margin-bottom:20px;">
                                 {stats_html}
                             </div>
-                            <p style="color:#555; line-height:1.6; font-size:15px; margin-bottom:20px;">{DOCTOR_BIO['desc']}</p>
-                            <h5 style="color:#124D41; margin-bottom:10px;">Board Certifications & Memberships</h5>
+                            <p style="color:#555; line-height:1.7; font-size:15px; margin-bottom:25px; padding-right:10px;">{DOCTOR_BIO['desc']}</p>
+                            <h5 style="color:#124D41; font-weight:700; font-size:14px; margin-bottom:12px; text-transform:uppercase; letter-spacing:0.5px;">Accreditation & Boards</h5>
                             <div style="margin-left:-4px;">{certs_html}</div>
                         </div>
                     </div>
@@ -226,7 +225,7 @@ else:
                         st.session_state.daily_tasks[selected_date].pop(i)
                         st.session_state.completed_counts[selected_date] += 1; st.rerun()
 
-    # --- OTHER PAGES (PRESERVED) ---
+    # --- RESERVATIONS, COMMUNITY, MESSAGES (PRESERVED) ---
     elif st.session_state.current_page == "Reservation": st.title("📅 Reservations"); st.table(RESERVATIONS_DB)
     elif st.session_state.current_page == "Community":
         st.title("🤝 Medical Community")
