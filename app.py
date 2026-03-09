@@ -1,181 +1,152 @@
 import streamlit as st
+import base64
+import os
 import time
 
-# --- 1. PAGE CONFIGURATION ---
 st.set_page_config(
-    page_title="M-FLO | Medi-Flow Orchestrator", 
+    page_title="M-FLO | Secure Access Portal", 
     page_icon="⚕️", 
     layout="wide"
 )
 
-# --- 2. THE CODED LOGO (SVG) ---
-# This recreates the medical-microphone branding directly in code.
-# No .png file required.
-logo_svg = """
-<div style="display: flex; flex-direction: column; align-items: center; justify-content: center; margin-bottom: 10px;">
-    <svg width="80" height="80" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <rect x="9" y="2" width="6" height="12" rx="3" fill="#93C572"/>
-        <path d="M5 10V11C5 14.866 8.13401 18 12 18V18C15.866 18 19 14.866 19 11V10" stroke="#93C572" stroke-width="2" stroke-linecap="round"/>
-        <line x1="12" y1="18" x2="12" y2="22" stroke="#93C572" stroke-width="2" stroke-linecap="round"/>
-        <line x1="9" y1="22" x2="15" y2="22" stroke="#93C572" stroke-width="2" stroke-linecap="round"/>
-        <path d="M12 7V11M10 9H14" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
-    </svg>
-    <div style="color: #93C572; font-family: 'Segoe UI', sans-serif; font-weight: 800; font-size: 24px; letter-spacing: -1px; margin-top: 5px;">
-        67+2 <span style="color: #124D41;">PODCAST</span>
-    </div>
-</div>
-"""
+def get_base_base64(file_path):
+    if os.path.exists(file_path):
+        with open(file_path, "rb") as f:
+            return base64.b64encode(f.read()).decode()
+    return None
 
-# --- 3. AGGRESSIVE CSS (Fixes Black Boxes & Forces Layout) ---
+logo_b64 = get_base_base64("logo_medical.png")
+
 st.markdown(f"""
     <style>
-    /* Force Light Mode Globally */
-    .stApp {{ background-color: #FFFFFF !important; color: #2F4F4F !important; }}
+    .stApp {{ background-color: #FFFFFF !important; }}
+
+    @keyframes samsungFadeInUp {{
+        from {{ opacity: 0; transform: translateY(50px); }}
+        to {{ opacity: 1; transform: translateY(0); }}
+    }}
+
+    .animate-in {{
+        animation: samsungFadeInUp 0.9s cubic-bezier(0.165, 0.84, 0.44, 1) forwards;
+    }}
     
-    /* THE BLACK BOX FIX: Target Streamlit's internal input containers */
-    div[data-baseweb="input"], div[data-baseweb="textarea"], .stTextArea textarea {{
+    div[data-baseweb="input"], div[data-baseweb="textarea"] {{
         background-color: #FFFFFF !important;
         border: 2px solid #93C572 !important;
-        border-radius: 10px !important;
+        border-radius: 12px !important;
     }}
     
-    /* THE TEXT FIX: Force input text to be Dark Green/Charcoal */
-    input, textarea {{
-        color: #124D41 !important;
-        -webkit-text-fill-color: #124D41 !important;
-    }}
+    input {{ color: #124D41 !important; -webkit-text-fill-color: #124D41 !important; }}
 
-    /* The Pistachio Frame (The Card) */
     .login-card {{
-        border: 2.5px solid #93C572;
-        border-radius: 20px;
-        padding: 40px;
+        border: 3px solid #93C572;
+        border-radius: 40px;
+        padding: 50px;
         background-color: #F9FFF9;
         text-align: center;
-        max-width: 480px;
+        max-width: 500px;
         margin: auto;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+        box-shadow: 0 20px 40px rgba(0,0,0,0.05);
     }}
 
-    /* Title & Label Styling */
-    .mflo-header {{ color: #124D41; font-size: 42px; font-weight: 900; margin: 0; line-height: 1.1; }}
-    label p {{ color: #124D41 !important; font-weight: bold !important; text-align: left !important; }}
+    .mflo-header {{ 
+        color: #124D41; 
+        font-size: 55px; 
+        font-weight: 900; 
+        margin: 0; 
+        letter-spacing: -2px; 
+    }}
 
-    /* Mint Authenticate Button */
     div.stButton > button {{
-        background-color: #98FFD9 !important;
+        background: linear-gradient(90deg, #98FFD9, #7CFFCC) !important;
         color: #124D41 !important;
-        border: 1.5px solid #93C572 !important;
+        border: none !important;
         font-weight: 800 !important;
         text-transform: uppercase;
         width: 100%;
-        padding: 12px;
-        border-radius: 10px;
-        margin-top: 10px;
+        padding: 15px;
+        border-radius: 12px;
+        transition: all 0.3s ease;
+    }}
+    
+    div.stButton > button:hover {{
+        transform: scale(1.02);
+        box-shadow: 0 10px 20px rgba(152, 255, 217, 0.5);
     }}
 
-    /* Sidebar Styling */
-    section[data-testid="stSidebar"] {{
-        background-color: #F0F4F2 !important;
-        border-right: 1px solid #93C572;
-    }}
+    label p {{ color: #124D41 !important; font-weight: bold !important; }}
     </style>
     """, unsafe_allow_html=True)
 
-# --- 4. SESSION MANAGEMENT ---
-if "authenticated" not in st.session_state:
-    st.session_state.authenticated = False
-if "orders" not in st.session_state:
-    st.session_state.orders = []
+if "auth" not in st.session_state:
+    st.session_state.auth = False
 
-# --- 5. APP NAVIGATION ---
-
-if not st.session_state.authenticated:
-    # --- PAGE 1: LOGIN (EXACT MATCH) ---
-    st.markdown("<br><br>", unsafe_allow_html=True)
+if not st.session_state.auth:
+    st.markdown("<br><br><br>", unsafe_allow_html=True)
     
-    # Everything inside this <div> is styled by the .login-card CSS
-    # We use the logo_svg variable here
+    logo_html = f'<div style="display: flex; justify-content: center;"><img src="data:image/png;base64,{logo_b64}" style="width:280px;"></div>' if logo_b64 else ""
+
     st.markdown(f"""
         <div class="login-card">
-            {logo_svg}
+            {logo_html}
+            <div style="color: #93C572; font-weight: 800; font-size: 28px; letter-spacing: 1px; margin-top: 10px;">67+2 PODCAST</div>
             <div class="mflo-header">M-FLO</div>
-            <p style="color: #124D41; font-size: 14px; margin-bottom: 20px; font-weight: 500;">
+            <p style="color: #124D41; font-size: 16px; font-weight: 500; opacity: 0.8;">
                 Medi-Flow Orchestrator v2.1 | Secure Portal
             </p>
-            <hr style="border-top: 1.5px solid #93C572; margin-bottom: 25px;">
+            <hr style="border-top: 2px solid #93C572; opacity: 0.2; margin: 30px 0;">
         </div>
     """, unsafe_allow_html=True)
 
-    # Inputs aligned with the frame
-    _, col2, _ = st.columns([1, 1.5, 1])
+    _, col2, _ = st.columns([1, 1.8, 1])
     with col2:
-        u = st.text_input("Physician ID", placeholder="doctor1")
+        u = st.text_input("Physician ID", placeholder="Enter ID")
         p = st.text_input("Security Key", type="password", placeholder="••••••••")
         
         if st.button("AUTHENTICATE SYSTEM"):
             if u == "doctor1" and p == "mediflow2026":
-                st.session_state.authenticated = True
+                st.session_state.auth = True
                 st.rerun()
             else:
-                st.error("Invalid Credentials. Access Denied.")
+                st.error("Access Denied.")
         
-        st.markdown("<p style='text-align:center; font-size:11px; color:gray; margin-top:15px;'>Auth: MD-Level Encrypted Access Only</p>", unsafe_allow_html=True)
-        st.info("ℹ️ Demo: doctor1 / mediflow2026")
+        st.markdown("<p style='text-align:center; font-size:12px; color:gray; margin-top:20px;'>Auth: MD-Level Encrypted Access Only</p>", unsafe_allow_html=True)
 
 else:
-    # --- PAGE 2: DASHBOARD (CLINICAL WORKSPACE) ---
     with st.sidebar:
-        # Coded logo also appears in sidebar
-        st.markdown(logo_svg, unsafe_allow_html=True)
+        if logo_b64:
+            st.markdown(f'<div style="text-align:center;"><img src="data:image/png;base64,{logo_b64}" width="120"></div>', unsafe_allow_html=True)
         st.title("M-FLO v2.1")
         st.write("Logged in: **Dr. John Doe**")
         st.divider()
         if st.button("LOGOUT / LOCK"):
-            st.session_state.authenticated = False
-            st.session_state.orders = []
+            st.session_state.auth = False
             st.rerun()
+
+    st.markdown('<div class="animate-in">', unsafe_allow_html=True)
 
     st.subheader("⚕️ Patient Consultation Environment")
     
-    # 3-Column Layout
-    col_pat, col_trans, col_res = st.columns([1, 2, 2])
-
-    with col_pat:
+    c1, c2, c3 = st.columns([1, 2, 2])
+    
+    with c1:
         st.markdown("#### Patient Context")
         with st.container(border=True):
             st.markdown("### **J. Doe**")
             st.caption("ID: #8821 | Male | 45yo")
-            st.divider()
             st.error("⚠️ ALLERGY: Penicillin")
             st.warning("⚠️ CONDITION: Hypertension")
 
-    with col_trans:
+    with c2:
         st.markdown("#### Clinical Interface")
-        notes = st.text_area("Live Transcript / Notes", height=350, placeholder="Type clinical notes here...")
-        
-        if st.button("EXECUTE INTENT ANALYSIS"):
-            if notes:
-                with st.spinner("Analyzing Clinical Data..."):
-                    time.sleep(1.5)
-                    st.session_state.orders = [
-                        {"type": "PHARMACY", "item": "Amoxicillin 500mg", "data": "QTY: 14 | 1x BID", "dest": "Main Pharmacy"},
-                        {"type": "LAB", "item": "Chest X-ray", "data": "URGENCY: STAT", "dest": "Radiology"}
-                    ]
-                    st.toast("Intents Detected!")
+        notes = st.text_area("Live Transcript", height=350, placeholder="Type notes here...")
+        if st.button("EXECUTE ANALYSIS"):
+            with st.spinner("Analyzing..."):
+                time.sleep(1)
+                st.toast("Intents Detected")
 
-    with col_res:
+    with c3:
         st.markdown("#### AI-Generated Orders")
-        if st.session_state.orders:
-            for idx, order in enumerate(st.session_state.orders):
-                with st.container(border=True):
-                    icon = "💊" if order['type'] == "PHARMACY" else "🔬"
-                    st.markdown(f"**{icon} {order['type']} ORDER**")
-                    st.code(f"ITEM: {order['item']}\nDATA: {order['data']}\nROUTE: {order['dest']}")
-                    
-                    c1, c2 = st.columns(2)
-                    if c1.button(f"VERIFY & ROUTE", key=f"v_{idx}"):
-                        st.success(f"Dispatched to {order['dest']}")
-                    c2.button(f"EDIT", key=f"e_{idx}")
-        else:
-            st.info("Awaiting transcription analysis...")
+        st.info("Awaiting analysis...")
+    
+    st.markdown('</div>', unsafe_allow_html=True)
