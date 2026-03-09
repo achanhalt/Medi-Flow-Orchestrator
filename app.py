@@ -2,20 +2,21 @@ import streamlit as st
 import base64
 import os
 
-# 1. PAGE CONFIG
+# 1. PAGE SETUP
 st.set_page_config(
-    page_title="M-FLO | Global Clinical Search", 
+    page_title="M-FLO | Cardiology Workspace", 
     page_icon="⚕️", 
     layout="wide"
 )
 
-# 2. GLOBAL DATA & VARIABLES
-user_name = "Dr. John Doe" 
-# This simulates your community database for search
+# 2. GLOBAL DATA & VARIABLES (Fixes NameError)
+user_name = "Dr. John Doe"
+
+# Mock Community Data for keyword search
 COMMUNITY_POSTS = [
-    {"user": "Cardio_Expert", "title": "High-fidelity dashboard tips", "content": "Streamlit CSS is powerful..."},
-    {"user": "Nurse_Joy", "title": "Patient intake protocols", "content": "New protocols for 2026..."},
-    {"user": "Dr_Strange", "title": "AI in Radiology", "content": "How M-FLO automates scans..."}
+    {"user": "u/Cardio_Lead", "title": "Hypertension resistance protocols", "content": "Recent studies suggest..."},
+    {"user": "u/Heart_Monitor", "title": "M-FLO v2.1 Beta Feedback", "content": "The new UI is much cleaner..."},
+    {"user": "u/Clinical_Tech", "title": "Software Engineering in Clinics", "content": "Integrating Python with EHR..."}
 ]
 
 def get_base64(file_path):
@@ -32,20 +33,24 @@ if "auth" not in st.session_state:
 if "current_page" not in st.session_state:
     st.session_state.current_page = "Homepage"
 
-# 4. REFINED CSS (Includes Search Results Styling)
+# 4. BALANCED PROFESSIONAL CSS
 st.markdown("""
     <style>
+    /* Website-Standard Scaling */
     html, body, [class*="css"] {
         font-family: 'Inter', sans-serif;
         font-size: 16px !important;
         color: #124D41;
     }
 
-    /* SEARCH BAR VERTICAL CENTERING FIX */
+    .stApp { background: #FDFDFD !important; }
+
+    /* SEARCH BAR FIX: FLEXBOX CENTERING (No Cutting) */
     .stTextInput > div > div {
         display: flex !important;
         align-items: center !important;
-        height: 54px !important; 
+        justify-content: center !important;
+        height: 50px !important; 
         background-color: #F4F4F4 !important;
         border-radius: 12px !important;
         border: 1.5px solid #E0E0E0 !important;
@@ -60,33 +65,43 @@ st.markdown("""
         padding: 0 !important;
         width: 100% !important;
         height: 100% !important;
-        line-height: normal !important;
+        line-height: normal !important; /* Prevents vertical clipping */
     }
 
-    /* AI SUGGESTIONS CONTAINER */
-    .search-results-box {
-        background: white;
-        border-radius: 12px;
-        box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    /* AI SUGGESTION BOX */
+    .search-suggestion-box {
+        background-color: white;
         border: 1px solid #EEE;
+        border-radius: 12px;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.08);
         padding: 10px;
         margin-top: 5px;
-        position: absolute;
-        width: 100%;
-        z-index: 1000;
+        position: relative;
+        z-index: 999;
     }
 
     /* SIDEBAR & BUTTONS */
     section[data-testid="stSidebar"] { width: 320px !important; }
+    
+    .sidebar-label {
+        color: #888;
+        font-size: 12px;
+        font-weight: 700;
+        margin: 20px 0 8px 15px;
+        text-transform: uppercase;
+    }
+
     .stButton > button {
         height: 48px !important;
         border-radius: 10px !important;
         text-align: left !important;
         padding-left: 20px !important;
+        transition: 0.2s ease;
     }
-    
+
     .stButton > button:hover {
         border-color: #93C572 !important;
+        background-color: #F9FFF9 !important;
         color: #93C572 !important;
     }
 
@@ -95,36 +110,39 @@ st.markdown("""
         border-radius: 20px !important;
         padding: 30px !important;
         background: white !important;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03) !important;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03) !important;
+        border: 1px solid #EEE !important;
     }
+
+    h1 { font-size: 38px !important; font-weight: 800 !important; }
+    .main .block-container { padding-top: 100px !important; }
     </style>
     """, unsafe_allow_html=True)
 
-# 5. SEARCH LOGIC FUNCTION
-def global_search(query):
-    if not query:
-        return None
-    
+# 5. SEARCH ENGINE LOGIC
+def run_global_search(query):
+    if not query: return None
     results = []
-    # 1. Search Pages (Functions)
-    pages = ["Homepage", "Patients", "Reservation", "Messages", "Community"]
-    for p in pages:
-        if query.lower() in p.lower():
-            results.append({"type": "Function", "title": f"Go to {p}", "action": p})
     
-    # 2. Search Community Keywords
+    # Check Pages (Functions)
+    nav_items = ["Homepage", "Patients", "Reservation", "Messages", "Community"]
+    for item in nav_items:
+        if query.lower() in item.lower():
+            results.append({"type": "Function", "title": f"Open {item}", "page": item})
+            
+    # Check Community Content (Keywords)
     for post in COMMUNITY_POSTS:
         if query.lower() in post["title"].lower() or query.lower() in post["content"].lower():
-            results.append({"type": "Community", "title": post["title"], "action": "Community"})
+            results.append({"type": "Community", "title": post["title"], "page": "Community"})
             
     return results
 
 # 6. APP FLOW
 if not st.session_state.auth:
-    # --- LOGIN ---
-    st.markdown("<br><br><br>", unsafe_allow_html=True)
+    # --- LOGIN SCREEN ---
+    st.markdown("<br><br>", unsafe_allow_html=True)
     with st.container(border=True):
-        st.markdown("<h2 style='text-align:center;'>M-FLO Secure Access</h2>", unsafe_allow_html=True)
+        st.markdown("<h2 style='text-align:center;'>M-FLO Authentication</h2>", unsafe_allow_html=True)
         u = st.text_input("Physician ID")
         p = st.text_input("Security Key", type="password")
         if st.button("AUTHENTICATE SYSTEM", use_container_width=True):
@@ -132,47 +150,64 @@ if not st.session_state.auth:
                 st.session_state.auth = True
                 st.rerun()
 else:
-    # --- TOP NAV WITH SMART SEARCH ---
+    # --- TOP NAV & AI SEARCH ---
     t1, t2, t3 = st.columns([1, 2, 1])
     with t2:
-        search_query = st.text_input("search", placeholder="Search functions, keywords, or AI insights...", label_visibility="collapsed", key="global_search_input")
+        # Search Bar with Fixed Centering
+        sq = st.text_input("search", placeholder="Search functions, patients, or keywords...", label_visibility="collapsed", key="global_search")
         
-        # AI Auto-Suggestions UI
-        matches = global_search(search_query)
+        matches = run_global_search(sq)
         if matches:
-            with st.container():
-                st.markdown('<div class="search-results-box">', unsafe_allow_html=True)
-                for m in matches[:5]: # Show top 5 matches
-                    label = f"[{m['type']}] {m['title']}"
-                    if st.button(label, key=f"res_{m['title']}", use_container_width=True):
-                        st.session_state.current_page = m['action']
-                        st.rerun()
-                st.markdown('</div>', unsafe_allow_html=True)
+            st.markdown('<div class="search-suggestion-box">', unsafe_allow_html=True)
+            for m in matches[:4]: # Limit to 4 results
+                btn_label = f"[{m['type']}] {m['title']}"
+                if st.button(btn_label, key=f"s_{m['title']}", use_container_width=True):
+                    st.session_state.current_page = m['page']
+                    st.rerun()
+            st.markdown('</div>', unsafe_allow_html=True)
 
     with t3:
         st.markdown(f"<p style='text-align:right; font-weight:700; padding-top:10px;'>Hello, {user_name}</p>", unsafe_allow_html=True)
 
-    # --- SIDEBAR ---
+    # --- SIDEBAR NAVIGATION ---
     with st.sidebar:
         if logo_b64: st.image(f"data:image/png;base64,{logo_b64}", use_container_width=True)
-        st.button("🏠 Homepage", use_container_width=True, on_click=lambda: setattr(st.session_state, 'current_page', 'Homepage'))
-        st.button("👥 Patients", use_container_width=True, on_click=lambda: setattr(st.session_state, 'current_page', 'Patients'))
-        st.button("🤝 Community", use_container_width=True, on_click=lambda: setattr(st.session_state, 'current_page', 'Community'))
+        st.markdown('<p class="sidebar-label">Main Menu</p>', unsafe_allow_html=True)
+        if st.button("🏠 Homepage", use_container_width=True): st.session_state.current_page = "Homepage"
+        if st.button("👥 Patients", use_container_width=True): st.session_state.current_page = "Patients"
+        if st.button("📅 Reservation", use_container_width=True): st.session_state.current_page = "Reservation"
+        
+        st.markdown('<p class="sidebar-label">Analytics</p>', unsafe_allow_html=True)
+        if st.button("🤝 Community", use_container_width=True): st.session_state.current_page = "Community"
+        
         st.divider()
         if st.button("Logout", use_container_width=True):
             st.session_state.auth = False
             st.rerun()
 
-    # --- CONTENT ---
-    st.markdown(f"<h1>{st.session_state.current_page}</h1>", unsafe_allow_html=True)
+    # --- CONTENT ROUTING ---
+    st.markdown(f"<h1>{st.session_state.current_page} Overview</h1>", unsafe_allow_html=True)
     
     if st.session_state.current_page == "Homepage":
-        with st.container(border=True):
-            st.markdown("### Clinical Overview")
-            st.line_chart({"bpm": [72, 75, 78, 74, 80]})
-            
+        c_l, c_r = st.columns([2, 1])
+        with c_l:
+            with st.container(border=True):
+                st.markdown("### Heart Performance")
+                st.line_chart({"bpm": [72, 75, 71, 80, 78]})
+        with c_r:
+            with st.container(border=True):
+                st.markdown("### My Schedule")
+                st.info("09:30 AM - Jane Doe")
+                st.success("11:00 AM - Approved: John Wick")
+
     elif st.session_state.current_page == "Community":
+        st.markdown("### **Active Forum Discussions**")
         for post in COMMUNITY_POSTS:
             with st.container(border=True):
-                st.markdown(f"**{post['user']}**: {post['title']}")
-                st.write(post['content'])
+                st.write(f"**{post['user']}**: {post['title']}")
+                st.caption(post['content'])
+                st.button("Upvote", key=f"up_{post['user']}")
+
+    else:
+        with st.container(border=True):
+            st.write(f"The module for {st.session_state.current_page} is ready for data integration.")
