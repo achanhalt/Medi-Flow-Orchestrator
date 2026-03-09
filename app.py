@@ -11,15 +11,22 @@ st.set_page_config(
     layout="wide"
 )
 
-# 2. GLOBAL DATA & VARIABLES (PRESERVED)
+# 2. GLOBAL DATA & VARIABLES (EXPANDED FOR A NICER LOOK)
 user_name = "Dr. John Doe"
 GITHUB_RAW_URL = "https://raw.githubusercontent.com/your-username/your-repo/main/doctor_profile.png" 
 
 DOCTOR_BIO = {
     "title": "Senior Consultant Cardiologist",
-    "desc": "Specializing in interventional cardiology and structural heart disease with over 15 years of clinical excellence.",
-    "certs": ["MD, Harvard Medical School", "Board Certified in Cardiovascular Disease", "FACC Fellowship"],
-    "achievements": ["Best Clinician Award 2025", "50+ Published Research Papers", "Lead Researcher - Project HeartBeat"]
+    "specialty": "Interventional Cardiology & Electrophysiology",
+    "desc": """Dr. John Doe is a world-renowned specialist in structural heart disease with over 15 years of clinical excellence. 
+    He pioneered the use of minimally invasive valve replacements at M-FLO General and currently serves as the Head of Cardiovascular Research. 
+    His work focuses on integrating real-time AI monitoring with patient-centric care models.""",
+    "certs": ["MD, Harvard Medical School", "Board Certified in Cardiovascular Disease", "FACC Fellowship", "European Society of Cardiology (ESC) Member"],
+    "stats": [
+        {"label": "Surgeries performed", "value": "1,200+"},
+        {"label": "Research Papers", "value": "84"},
+        {"label": "Patient Rating", "value": "4.9/5"}
+    ]
 }
 
 COMMUNITY_POSTS = [
@@ -57,7 +64,7 @@ doctor_b64 = get_base64_from_url(GITHUB_RAW_URL)
 if not doctor_b64:
     doctor_b64 = get_base64("doctor_profile.png")
 
-# 4. SESSION STATE (PRESERVED + DYNAMIC ALERTS)
+# 4. SESSION STATE (PRESERVED)
 if "auth" not in st.session_state:
     st.session_state.auth = False
 if "current_page" not in st.session_state:
@@ -65,7 +72,6 @@ if "current_page" not in st.session_state:
 if "show_alerts" not in st.session_state:
     st.session_state.show_alerts = False
 
-# Moving Urgent Patients to Session State so they can be removed live
 if "urgent_patients" not in st.session_state:
     st.session_state.urgent_patients = [
         {"Room": "402", "Name": "Alice Tan", "Issue": "Tachycardia Spike"},
@@ -80,10 +86,9 @@ if "daily_tasks" not in st.session_state:
 if "completed_counts" not in st.session_state:
     st.session_state.completed_counts = {}
 
-# 5. CSS (UNIFIED DESIGN + ALIGNMENT FIX)
+# 5. CSS (PRESERVED + ENHANCED PROFILE CARD)
 st.markdown(f"""
     <style>
-    @keyframes slideUp {{ from {{ opacity: 0; transform: translateY(20px); }} to {{ opacity: 1; transform: translateY(0); }} }}
     [data-testid="stHeader"] {{ display: none; }}
     [data-testid="stAppViewContainer"] {{
         background: radial-gradient(circle at top right, #F9FFF9, #FDFDFD) !important;
@@ -95,9 +100,23 @@ st.markdown(f"""
     }}
     .stat-val {{ font-size: 24px; font-weight: 800; color: #124D41; margin: 0; }}
     .stat-lbl {{ font-size: 12px; color: #666; text-transform: uppercase; margin: 0; }}
+    
+    /* ENHANCED PROFILE CARD */
+    .profile-card {{ 
+        background: white; 
+        padding: 40px; 
+        border-radius: 35px; 
+        border: 1px solid #E0E0E0; 
+        box-shadow: 0 15px 50px rgba(0,0,0,0.05);
+        margin-top: 10px;
+    }}
+    .profile-img {{ width: 140px; height: 140px; border-radius: 30px; object-fit: cover; border: 4px solid #93C572; box-shadow: 0 8px 20px rgba(147, 197, 114, 0.2); }}
+    .cert-tag {{ background: #E8F5E9; color: #2E7D32; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 600; margin: 4px; display: inline-block; border: 1px solid #C8E6C9; }}
+    .mini-stat {{ text-align: center; padding: 10px; }}
+    .mini-stat-val {{ font-size: 18px; font-weight: 700; color: #124D41; display: block; }}
+    .mini-stat-lbl {{ font-size: 10px; color: #888; text-transform: uppercase; }}
+    
     .alert-card {{ background: #FFF5F5; border-left: 5px solid #E57373; padding: 15px; border-radius: 12px; margin-bottom: 10px; }}
-    .profile-card {{ background: white; padding: 35px; border-radius: 30px; border: 1px solid #E0E0E0; box-shadow: 0 10px 40px rgba(0,0,0,0.04); }}
-    .profile-img {{ width: 110px; height: 110px; border-radius: 25px; object-fit: cover; border: 3px solid #93C572; }}
     .todo-item {{ background:#F1F8E9; padding:12px; border-radius:12px; border-left:5px solid #93C572; margin-bottom:10px; }}
     </style>
     """, unsafe_allow_html=True)
@@ -115,19 +134,18 @@ if not st.session_state.auth:
             if u == "doctor1" and p == "mediflow2026":
                 st.session_state.auth = True; st.rerun()
 else:
-    # --- SIDEBAR (PRESERVED) ---
+    # SIDEBAR
     with st.sidebar:
         if logo_b64: st.image(f"data:image/png;base64,{logo_b64}", use_container_width=True)
         st.divider()
-        if st.button("🏠 Homepage", key="nav_home", use_container_width=True): st.session_state.current_page = "Homepage"
-        if st.button("👥 Patients", key="nav_pat", use_container_width=True): st.session_state.current_page = "Homepage"
-        if st.button("📅 Reservation", key="nav_res", use_container_width=True): st.session_state.current_page = "Reservation"
-        if st.button("✉️ Messages", key="nav_msg", use_container_width=True): st.session_state.current_page = "Messages"
-        if st.button("🤝 Community", key="nav_com", use_container_width=True): st.session_state.current_page = "Community"
+        if st.button("🏠 Homepage", key="nav_h", use_container_width=True): st.session_state.current_page = "Homepage"
+        if st.button("👥 Patients", key="nav_p", use_container_width=True): st.session_state.current_page = "Homepage"
+        if st.button("📅 Reservation", key="nav_r", use_container_width=True): st.session_state.current_page = "Reservation"
+        if st.button("✉️ Messages", key="nav_m", use_container_width=True): st.session_state.current_page = "Messages"
+        if st.button("🤝 Community", key="nav_c", use_container_width=True): st.session_state.current_page = "Community"
         st.divider()
-        if st.button("🚪 Logout", key="nav_logout", use_container_width=True): st.session_state.auth = False; st.rerun()
+        if st.button("🚪 Logout", key="nav_l", use_container_width=True): st.session_state.auth = False; st.rerun()
 
-    # --- HOMEPAGE ---
     if st.session_state.current_page == "Homepage":
         st.markdown(f'<p style="color:#124D41; font-weight:700; font-size:18px;">Hello, {user_name} 👋</p>', unsafe_allow_html=True)
 
@@ -139,39 +157,57 @@ else:
             alert_count = len(st.session_state.urgent_patients)
             color = "#E57373" if alert_count > 0 else "#93C572"
             st.markdown(f'<div class="stat-box" style="border-color:{color};"><p class="stat-lbl">Urgent Alerts</p><p class="stat-val" style="color:{color};">{alert_count:02d}</p></div>', unsafe_allow_html=True)
-            if st.button("Manage Alerts", key="manage_btn", use_container_width=True):
-                st.session_state.show_alerts = not st.session_state.show_alerts
-                st.rerun()
+            if st.button("Manage Alerts", key="manage_alerts", use_container_width=True):
+                st.session_state.show_alerts = not st.session_state.show_alerts; st.rerun()
         with s4: st.markdown('<div class="stat-box"><p class="stat-lbl">System Health</p><p class="stat-val">98%</p></div>', unsafe_allow_html=True)
         
-        # URGENT ALERT LISTING
+        # URGENT ALERTS LOGIC (PRESERVED)
         if st.session_state.show_alerts:
             st.markdown("#### 🚨 Active Urgent Cases")
-            if not st.session_state.urgent_patients:
-                st.success("All urgent issues are currently resolved.")
+            if not st.session_state.urgent_patients: st.success("All clear!")
             else:
                 for idx, p_alert in enumerate(st.session_state.urgent_patients):
                     ac1, ac2 = st.columns([4, 1])
-                    with ac1:
-                        st.markdown(f'<div class="alert-card"><strong>Room {p_alert["Room"]}</strong>: {p_alert["Name"]} | <small>{p_alert["Issue"]}</small></div>', unsafe_allow_html=True)
-                    with ac2:
+                    with ac1: st.markdown(f'<div class="alert-card"><strong>Room {p_alert["Room"]}</strong>: {p_alert["Name"]} | <small>{p_alert["Issue"]}</small></div>', unsafe_allow_html=True)
+                    with ac2: 
                         if st.button("Resolve ✅", key=f"res_{idx}", use_container_width=True):
-                            st.session_state.urgent_patients.pop(idx)
-                            st.rerun()
+                            st.session_state.urgent_patients.pop(idx); st.rerun()
             st.divider()
 
-        # PROFILE & PLANNING
+        # --- LONGER & NICER DOCTOR PROFILE ---
         col_main, col_plan = st.columns([2.2, 1], gap="large")
         with col_main:
             img_html = f'<img src="data:image/png;base64,{doctor_b64}" class="profile-img">' if doctor_b64 else '👨‍⚕️'
-            st.markdown(f"""<div class="profile-card"><div style="display:flex; align-items:center; gap:25px;">{img_html}<div><h1 style="margin:0; color:#124D41;">{user_name}</h1><p style="color:#93C572; font-weight:700;">{DOCTOR_BIO['title']}</p></div></div><hr style="border:0; border-top:1px solid #eee; margin:25px 0;"><p style="color:#444; line-height:1.7;">{DOCTOR_BIO['desc']}</p><h4 style="color:#124D41;">Academic Credentials</h4>{''.join([f'<span style="background:#E8F5E9; color:#2E7D32; padding:5px 12px; border-radius:15px; font-size:12px; font-weight:600; margin:4px; display:inline-block;">{c}</span>' for c in DOCTOR_BIO['certs']])}</div>""", unsafe_allow_html=True)
+            
+            # Generating HTML for Mini Stats
+            stats_html = "".join([f'<div class="mini-stat"><span class="mini-stat-val">{s["value"]}</span><span class="mini-stat-lbl">{s["label"]}</span></div>' for s in DOCTOR_BIO['stats']])
+            
+            # Generating HTML for Cert Tags
+            certs_html = "".join([f'<span class="cert-tag">{c}</span>' for c in DOCTOR_BIO['certs']])
+
+            st.markdown(f"""
+                <div class="profile-card">
+                    <div style="display:flex; align-items:flex-start; gap:35px;">
+                        {img_html}
+                        <div style="flex-grow:1;">
+                            <h1 style="margin:0; color:#124D41; font-size:32px;">{user_name}</h1>
+                            <p style="color:#93C572; font-weight:700; margin-bottom:15px; font-size:18px;">{DOCTOR_BIO['title']}</p>
+                            <div style="display:flex; gap:30px; border-top: 1px solid #f0f0f0; border-bottom: 1px solid #f0f0f0; padding: 15px 0; margin-bottom:15px;">
+                                {stats_html}
+                            </div>
+                            <p style="color:#555; line-height:1.6; font-size:15px; margin-bottom:20px;">{DOCTOR_BIO['desc']}</p>
+                            <h5 style="color:#124D41; margin-bottom:10px;">Board Certifications & Memberships</h5>
+                            <div style="margin-left:-4px;">{certs_html}</div>
+                        </div>
+                    </div>
+                </div>
+            """, unsafe_allow_html=True)
             
         with col_plan:
             st.markdown("### 📅 Calendar")
             selected_date = str(st.date_input("Schedule", label_visibility="collapsed"))
             if selected_date not in st.session_state.daily_tasks: st.session_state.daily_tasks[selected_date] = []
             if selected_date not in st.session_state.completed_counts: st.session_state.completed_counts[selected_date] = 0
-
             st.divider()
             st.markdown(f"### 📝 Planning: {selected_date}")
             new_task = st.text_input("Add task", key=f"input_{selected_date}")
@@ -182,7 +218,6 @@ else:
             comp_count = st.session_state.completed_counts[selected_date]
             total = len(curr_tasks) + comp_count
             st.progress(comp_count / total if total > 0 else 0)
-            
             for i, task in enumerate(curr_tasks):
                 c1, c2 = st.columns([5, 1])
                 with c1: st.markdown(f'<div class="todo-item">{task}</div>', unsafe_allow_html=True)
@@ -192,10 +227,8 @@ else:
                         st.session_state.completed_counts[selected_date] += 1; st.rerun()
 
     # --- OTHER PAGES (PRESERVED) ---
-    elif st.session_state.current_page == "Reservation":
-        st.title("📅 Reservations"); st.table(RESERVATIONS_DB)
+    elif st.session_state.current_page == "Reservation": st.title("📅 Reservations"); st.table(RESERVATIONS_DB)
     elif st.session_state.current_page == "Community":
         st.title("🤝 Medical Community")
         for post in COMMUNITY_POSTS: st.markdown(f'<div class="profile-card" style="margin-bottom:15px;"><strong>{post["user"]}</strong>: {post["title"]}</div>', unsafe_allow_html=True)
-    elif st.session_state.current_page == "Messages":
-        st.title("✉️ Messages"); st.write(MESSAGES_DB)
+    elif st.session_state.current_page == "Messages": st.title("✉️ Messages"); st.write(MESSAGES_DB)
