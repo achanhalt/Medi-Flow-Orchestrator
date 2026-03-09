@@ -38,38 +38,56 @@ if "current_page" not in st.session_state:
 if "active_chat" not in st.session_state:
     st.session_state.active_chat = list(MESSAGES_DB.keys())[0]
 
-# 4. BALANCED CSS (Fixes Search Bar & Keeps Design)
+# 4. ENHANCED ANIMATION & COLOR THEME CSS
 st.markdown("""
     <style>
+    /* SOFT THEME BACKGROUND */
+    .stApp {
+        background: radial-gradient(circle at top right, #F9FFF9, #FDFDFD) !important;
+    }
+
     html, body, [class*="css"] {
         font-family: 'Inter', sans-serif;
         font-size: 16px !important;
         color: #124D41;
     }
 
-    .stApp { background: #FDFDFD !important; }
+    /* KEYFRAMES FOR MOTIONS */
+    @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes buttonPop {
+        0% { transform: scale(1); }
+        50% { transform: scale(0.98); }
+        100% { transform: scale(1); }
+    }
+
+    .page-transition { animation: fadeInUp 0.5s ease-out forwards; }
 
     /* SEARCH BAR FIX: NO CLIPPING */
     .stTextInput > div > div {
         display: flex !important;
         align-items: center !important;
         height: 50px !important; 
-        background-color: #F4F4F4 !important;
+        background-color: #FFFFFF !important;
         border-radius: 12px !important;
         border: 1.5px solid #E0E0E0 !important;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.02);
     }
 
     .stTextInput > div > div > input {
         text-align: center !important;
         font-size: 16px !important;
         height: 100% !important;
-        line-height: 50px !important; /* Forces vertical center */
+        line-height: 50px !important; 
         padding: 0 !important;
         background: transparent !important;
         border: none !important;
     }
 
-    /* LOGIN PAGE DESIGN */
+    /* LOGIN PAGE DESIGN (PRESERVED) */
     .login-card {
         border: 6px solid #93C572; 
         border-radius: 80px; 
@@ -78,31 +96,46 @@ st.markdown("""
         text-align: center; 
         max-width: 900px; 
         margin: auto;
+        box-shadow: 0 20px 50px rgba(147, 197, 114, 0.15);
     }
 
-    /* SIDEBAR & MESSAGES */
-    .chat-bubble {
-        padding: 12px;
-        border-radius: 10px;
-        background-color: #F1F8F1;
-        margin-bottom: 8px;
-        border: 1px solid #EAEAEA;
-    }
-
-    section[data-testid="stSidebar"] { width: 300px !important; }
-    
+    /* BUTTON MOTIONS */
     .stButton > button {
         height: 48px !important;
         border-radius: 10px !important;
         text-align: left !important;
         padding-left: 15px !important;
+        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+        background-color: white !important;
+        border: 1px solid #EEE !important;
     }
 
+    .stButton > button:hover {
+        border-color: #93C572 !important;
+        color: #93C572 !important;
+        background-color: #F9FFF9 !important;
+        transform: translateY(-2px) scale(1.02) !important;
+        box-shadow: 0 5px 15px rgba(147, 197, 114, 0.1) !important;
+    }
+
+    .stButton > button:active {
+        transform: scale(0.95) !important;
+    }
+
+    /* SIDEBAR */
+    section[data-testid="stSidebar"] { 
+        width: 320px !important; 
+        background-color: white !important;
+        border-right: 1px solid #F0F0F0;
+    }
+
+    /* CARDS */
     div[data-testid="stVerticalBlockBorderWrapper"] {
         border-radius: 20px !important;
         padding: 30px !important;
         background: white !important;
         border: 1px solid #EEE !important;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.02) !important;
     }
     
     .main .block-container { padding-top: 80px !important; }
@@ -121,7 +154,7 @@ def run_global_search(query):
 
 # 6. APP FLOW
 if not st.session_state.auth:
-    # --- RESTORED DESIGN FOR LOGIN PAGE ---
+    # --- PRESERVED LOGIN DESIGN ---
     st.markdown("<br><br>", unsafe_allow_html=True)
     logo_html = f'<img src="data:image/png;base64,{logo_b64}" style="width:300px;">' if logo_b64 else ""
     
@@ -142,35 +175,37 @@ if not st.session_state.auth:
                 st.session_state.auth = True
                 st.rerun()
 else:
-    # --- DASHBOARD TOP NAV ---
+    # --- TOP NAV & SEARCH ---
     t1, t2, t3 = st.columns([1, 2, 1])
     with t2:
         sq = st.text_input("search", placeholder="Search functions...", label_visibility="collapsed", key="g_search")
         matches = run_global_search(sq)
         if matches:
-            with st.container():
-                for m in matches[:3]:
-                    if st.button(f"[{m['type']}] {m['title']}", key=f"s_{m['title']}", use_container_width=True):
-                        st.session_state.current_page = m['page']
-                        st.rerun()
+            st.markdown('<div class="page-transition">', unsafe_allow_html=True)
+            for m in matches[:3]:
+                if st.button(f"🔍 {m['title']}", key=f"s_{m['title']}", use_container_width=True):
+                    st.session_state.current_page = m['page']
+                    st.rerun()
+            st.markdown('</div>', unsafe_allow_html=True)
 
     with t3:
         st.markdown(f"<p style='text-align:right; font-weight:700; padding-top:10px;'>Hello, {user_name}</p>", unsafe_allow_html=True)
 
-    # --- SIDEBAR ---
+    # --- SIDEBAR (ANIMATED BUTTONS) ---
     with st.sidebar:
         if logo_b64: st.image(f"data:image/png;base64,{logo_b64}", use_container_width=True)
-        st.markdown("### Menu")
-        if st.button("🏠 Home", use_container_width=True): st.session_state.current_page = "Homepage"
+        st.markdown("<br>", unsafe_allow_html=True)
+        if st.button("🏠 Homepage", use_container_width=True): st.session_state.current_page = "Homepage"
         if st.button("👥 Patients", use_container_width=True): st.session_state.current_page = "Patients"
         if st.button("✉️ Messages", use_container_width=True): st.session_state.current_page = "Messages"
         if st.button("🤝 Community", use_container_width=True): st.session_state.current_page = "Community"
         st.divider()
-        if st.button("Logout", use_container_width=True):
+        if st.button("🚪 Logout", use_container_width=True):
             st.session_state.auth = False
             st.rerun()
 
-    # --- CONTENT ROUTING ---
+    # --- CONTENT AREA (WITH TRANSITION ANIMATION) ---
+    st.markdown('<div class="page-transition">', unsafe_allow_html=True)
     st.markdown(f"<h1>{st.session_state.current_page}</h1>", unsafe_allow_html=True)
 
     if st.session_state.current_page == "Messages":
@@ -181,16 +216,16 @@ else:
                 if st.button(f"👤 {contact}", key=f"c_{contact}", use_container_width=True):
                     st.session_state.active_chat = contact
         with m2:
-            with st.container(height=350, border=True):
+            with st.container(height=400, border=True):
                 st.markdown(f"**Chat: {st.session_state.active_chat}**")
                 for msg in MESSAGES_DB[st.session_state.active_chat]:
-                    st.markdown(f'<div class="chat-bubble">{msg}</div>', unsafe_allow_html=True)
-            st.text_input("Message...", key="chat_in", label_visibility="collapsed")
-            st.button("Send ➔")
+                    st.markdown(f'<div style="background:#F1F8F1; padding:12px; border-radius:10px; margin-bottom:8px; border:1px solid #EEE;">{msg}</div>', unsafe_allow_html=True)
+            st.text_input("Reply...", key="chat_in", label_visibility="collapsed")
+            st.button("Send Message ➔")
 
     elif st.session_state.current_page == "Homepage":
         with st.container(border=True):
-            st.markdown("### Heart Rate Performance")
+            st.markdown("### Heart Rate Telemetry")
             st.line_chart({"bpm": [72, 75, 78, 74, 80]})
     
     elif st.session_state.current_page == "Community":
@@ -198,3 +233,5 @@ else:
             with st.container(border=True):
                 st.write(f"**{post['user']}**: {post['title']}")
                 st.button("Upvote 🔼", key=f"up_{post['user']}")
+
+    st.markdown('</div>', unsafe_allow_html=True)
