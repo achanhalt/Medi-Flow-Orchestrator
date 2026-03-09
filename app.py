@@ -6,7 +6,7 @@ from datetime import date, datetime
 
 # 1. PAGE SETUP
 st.set_page_config(
-    page_title="M-FLO | Cardiology Workspace", 
+    page_title="M-FLO | clinical Workspace", 
     page_icon="⚕️", 
     layout="wide"
 )
@@ -16,13 +16,13 @@ user_name = "Dr. John Doe"
 GITHUB_RAW_URL = "https://raw.githubusercontent.com/your-username/your-repo/main/doctor_profile.jpg" 
 
 DOCTOR_BIO = {
-    "title": "Senior Consultant Cardiologist",
-    "specialty": "Interventional Cardiology & Electrophysiology",
+    "title": "Consultant Physician",
+    "specialty": "Internal Medicine & Diagnostics",
     "desc": """Dr. John Doe is a world-renowned specialist in structural heart disease with over 15 years of clinical excellence. 
     He pioneered the use of minimally invasive valve replacements at M-FLO General and currently serves as the Head of Cardiovascular Research.""",
     "certs": ["MD, Harvard Medical School", "Board Certified in Cardiovascular Disease", "FACC Fellowship", "European Society of Cardiology (ESC) Member"],
     "stats": [
-        {"label": "Surgeries performed", "value": "1,200+"},
+        {"label": "Consultations", "value": "1,200+"},
         {"label": "Research Papers", "value": "84"},
         {"label": "Patient Rating", "value": "4.9/5"}
     ]
@@ -80,7 +80,7 @@ if "urgent_patients" not in st.session_state:
 
 if "daily_tasks" not in st.session_state:
     st.session_state.daily_tasks = {
-        str(date.today()): ["Review Lab Results", "Surgery Consultation", "Department Meeting"]
+        str(date.today()): [] # Initialized as empty so counts start at 0
     }
 if "completed_counts" not in st.session_state:
     st.session_state.completed_counts = {}
@@ -135,14 +135,13 @@ if not st.session_state.auth:
             if u == "doctor1" and p == "mediflow2026":
                 st.session_state.auth = True; st.rerun()
 else:
-    # --- LOGIC TO FETCH DYNAMIC STATS FROM CALENDAR ---
-    # This checks for events scheduled for the current date
+    # --- UPDATED PHYSICIAN LOGIC ---
     today_str = date.today().strftime("%Y-%m-%d")
     current_tasks = st.session_state.daily_tasks.get(today_str, [])
     
-    # Counting logic: looks for "Patient" or "Surgery" in the daily tasks/calendar items
-    count_patients = sum(1 for task in current_tasks if "patient" in task.lower())
-    count_surgeries = sum(1 for task in current_tasks if "surgery" in task.lower())
+    # Updated to search for "Patient" or "Follow-up"
+    count_patients = sum(1 for task in current_tasks if "patient" in task.lower() or "consult" in task.lower())
+    count_followups = sum(1 for task in current_tasks if "follow" in task.lower() or "review" in task.lower())
 
     # SIDEBAR
     with st.sidebar:
@@ -159,17 +158,17 @@ else:
     if st.session_state.current_page == "Homepage":
         st.markdown(f'<p style="color:#124D41; font-weight:700; font-size:18px;">Hello, {user_name} 👋</p>', unsafe_allow_html=True)
 
-        # UPDATED STATS ROW (LINKED TO CALENDAR/TASKS)
+        # UPDATED STATS ROW (Physician Labels + Dynamic Counters)
         s1, s2, s3, s4 = st.columns(4)
-        with s1: st.markdown(f'<div class="stat-box"><p class="stat-lbl">Patients Today</p><p class="stat-val">{count_patients:02d}</p></div>', unsafe_allow_html=True)
-        with s2: st.markdown(f'<div class="stat-box"><p class="stat-lbl">Surgeries</p><p class="stat-val">{count_surgeries:02d}</p></div>', unsafe_allow_html=True)
+        with s1: st.markdown(f'<div class="stat-box"><p class="stat-lbl">Consultations</p><p class="stat-val">{count_patients:02d}</p></div>', unsafe_allow_html=True)
+        with s2: st.markdown(f'<div class="stat-box"><p class="stat-lbl">Follow-ups</p><p class="stat-val">{count_followups:02d}</p></div>', unsafe_allow_html=True)
         with s3:
             alert_count = len(st.session_state.urgent_patients)
             color = "#E57373" if alert_count > 0 else "#93C572"
             st.markdown(f'<div class="stat-box" style="border-color:{color};"><p class="stat-lbl">Urgent Alerts</p><p class="stat-val" style="color:{color};">{alert_count:02d}</p></div>', unsafe_allow_html=True)
             if st.button("Manage Alerts", key="manage_alerts", use_container_width=True):
                 st.session_state.show_alerts = not st.session_state.show_alerts; st.rerun()
-        with s4: st.markdown('<div class="stat-box"><p class="stat-lbl">System Health</p><p class="stat-val">98%</p></div>', unsafe_allow_html=True)
+        with s4: st.markdown('<div class="stat-box"><p class="stat-lbl">Clinic Health</p><p class="stat-val">98%</p></div>', unsafe_allow_html=True)
         
         # REST OF THE CODE (PRESERVED)
         if st.session_state.show_alerts:
