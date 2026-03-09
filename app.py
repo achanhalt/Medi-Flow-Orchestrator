@@ -34,10 +34,11 @@ COMMUNITY_POSTS = [
     {"user": "u/Heart_Monitor", "title": "M-FLO v2.1 Beta Feedback", "content": "The new UI is much cleaner..."}
 ]
 
+# FIXED THE SYNTAX ERROR HERE (Line 37-40)
 RESERVATIONS_DB = [
     {"Time": "09:00 AM", "Patient": "Alice Tan", "Status": "Confirmed"},
     {"Time": "11:30 AM", "Patient": "Bob Smith", "Status": "Pending"}
-)
+]
 
 MESSAGES_DB = {
     "Dr. Sarah Smith": ["Hello Doctor, regarding the lab results...", "I've updated the patient chart."],
@@ -86,7 +87,7 @@ if "daily_tasks" not in st.session_state:
 if "completed_counts" not in st.session_state:
     st.session_state.completed_counts = {}
 
-# 5. CSS (PRESERVED + ADDED MENU SYMBOL STYLE)
+# 5. CSS (PRESERVED)
 st.markdown(f"""
     <style>
     [data-testid="stHeader"] {{ display: none; }}
@@ -94,7 +95,6 @@ st.markdown(f"""
         background: radial-gradient(circle at top right, #F9FFF9, #FDFDFD) !important;
     }}
     
-    /* FLOATING MENU SYMBOL STYLE */
     .menu-trigger {{
         position: fixed;
         top: 20px;
@@ -109,9 +109,7 @@ st.markdown(f"""
         display: flex;
         align-items: center;
         gap: 10px;
-        transition: 0.3s;
     }}
-    .menu-trigger:hover {{ border-color: #93C572; background: #F9FFF9; }}
 
     .stat-box {{ 
         background: #F1F8E9; 
@@ -125,7 +123,7 @@ st.markdown(f"""
         background: white; padding: 40px; border-radius: 35px; border: 1px solid #E0E0E0; 
         box-shadow: 0 15px 50px rgba(0,0,0,0.05); margin-top: 10px;
     }}
-    .profile-img {{ width: 140px; height: 140px; border-radius: 30px; object-fit: cover; border: 4px solid #93C572; box-shadow: 0 8px 20px rgba(147, 197, 114, 0.2); }}
+    .profile-img {{ width: 140px; height: 140px; border-radius: 30px; object-fit: cover; border: 4px solid #93C572; }}
     .cert-tag {{ background: #E8F5E9; color: #2E7D32; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 600; margin: 4px; display: inline-block; border: 1px solid #C8E6C9; }}
     .mini-stat {{ text-align: center; padding: 10px; }}
     .mini-stat-val {{ font-size: 18px; font-weight: 700; color: #124D41; display: block; }}
@@ -149,7 +147,7 @@ if not st.session_state.auth:
             if u == "doctor1" and p == "mediflow2026":
                 st.session_state.auth = True; st.rerun()
 else:
-    # ADDED MENU SYMBOL (Instructional Helper)
+    # MENU TRIGGER HELPER
     st.markdown("""
         <div class="menu-trigger">
             <span style="font-size:20px;">☰</span>
@@ -157,7 +155,7 @@ else:
         </div>
     """, unsafe_allow_html=True)
 
-    # SIDEBAR (PRESERVED)
+    # SIDEBAR
     with st.sidebar:
         if logo_b64: st.image(f"data:image/png;base64,{logo_b64}", use_container_width=True)
         st.divider()
@@ -184,7 +182,7 @@ else:
                 st.session_state.show_alerts = not st.session_state.show_alerts; st.rerun()
         with s4: st.markdown('<div class="stat-box"><p class="stat-lbl">System Health</p><p class="stat-val">98%</p></div>', unsafe_allow_html=True)
         
-        # URGENT ALERTS LOGIC (PRESERVED)
+        # URGENT ALERTS (PRESERVED)
         if st.session_state.show_alerts:
             st.markdown("#### 🚨 Active Urgent Cases")
             if not st.session_state.urgent_patients: st.success("All clear!")
@@ -197,7 +195,7 @@ else:
                             st.session_state.urgent_patients.pop(idx); st.rerun()
             st.divider()
 
-        # DOCTOR PROFILE (PRESERVED)
+        # PROFILE & PLANNING
         col_main, col_plan = st.columns([2.2, 1], gap="large")
         with col_main:
             img_html = f'<img src="data:image/png;base64,{doctor_b64}" class="profile-img">' if doctor_b64 else '👨‍⚕️'
@@ -245,7 +243,6 @@ else:
                         st.session_state.daily_tasks[selected_date].pop(i)
                         st.session_state.completed_counts[selected_date] += 1; st.rerun()
 
-    # --- OTHER PAGES (PRESERVED) ---
     elif st.session_state.current_page == "Reservation": st.title("📅 Reservations"); st.table(RESERVATIONS_DB)
     elif st.session_state.current_page == "Community":
         st.title("🤝 Medical Community")
