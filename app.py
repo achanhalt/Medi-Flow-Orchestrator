@@ -22,7 +22,6 @@ DOCTOR_BIO = {
     "achievements": ["Best Clinician Award 2025", "50+ Published Research Papers", "Lead Researcher - Project HeartBeat"]
 }
 
-# NEW DATA FOR URGENT ALERTS
 URGENT_PATIENTS = [
     {"Room": "402", "Name": "Alice Tan", "Issue": "Tachycardia Spike"},
     {"Room": "ICU-1", "Name": "Bob Smith", "Issue": "Post-Op Arrhythmia"},
@@ -64,7 +63,7 @@ doctor_b64 = get_base64_from_url(GITHUB_RAW_URL)
 if not doctor_b64:
     doctor_b64 = get_base64("doctor_profile.png")
 
-# 4. SESSION STATE (PRESERVED + NEW ALERT TOGGLE)
+# 4. SESSION STATE
 if "auth" not in st.session_state:
     st.session_state.auth = False
 if "current_page" not in st.session_state:
@@ -79,7 +78,7 @@ if "daily_tasks" not in st.session_state:
 if "completed_counts" not in st.session_state:
     st.session_state.completed_counts = {}
 
-# 5. CSS (UNIFIED DESIGN PRESERVED + STATS CSS)
+# 5. CSS (ALIGNMENT FIX INCLUDED)
 st.markdown(f"""
     <style>
     @keyframes slideUp {{ from {{ opacity: 0; transform: translateY(20px); }} to {{ opacity: 1; transform: translateY(0); }} }}
@@ -104,10 +103,28 @@ st.markdown(f"""
     .profile-img {{ width: 110px; height: 110px; border-radius: 25px; object-fit: cover; border: 3px solid #93C572; }}
     .todo-item {{ background:#F1F8E9; padding:12px; border-radius:12px; border-left:5px solid #93C572; margin-bottom:10px; }}
     
-    /* STAT BOX STYLES */
-    .stat-box {{ background: #F1F8E9; border-radius: 20px; padding: 20px; text-align: center; border: 1px solid #E1EDD8; }}
-    .stat-val {{ font-size: 24px; font-weight: 800; color: #124D41; }}
-    .stat-lbl {{ font-size: 12px; color: #666; text-transform: uppercase; }}
+    /* ALIGNED STAT BOXES */
+    .stat-box {{ 
+        background: #F1F8E9; 
+        border-radius: 20px; 
+        padding: 20px; 
+        text-align: center; 
+        border: 1px solid #E1EDD8;
+        height: 140px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+    }}
+    .stat-val {{ font-size: 24px; font-weight: 800; color: #124D41; margin-bottom: 0; }}
+    .stat-lbl {{ font-size: 12px; color: #666; text-transform: uppercase; margin-bottom: 5px; }}
+    
+    /* SMALL ALIGNED BUTTON STYLE */
+    .stButton > button {{
+        width: 100%;
+        border-radius: 12px;
+    }}
+    
     .alert-card {{ background: #FFF5F5; border-left: 5px solid #E57373; padding: 12px; border-radius: 12px; margin-bottom: 10px; }}
     </style>
     """, unsafe_allow_html=True)
@@ -140,18 +157,22 @@ else:
         if st.button("🚪 Logout", use_container_width=True): st.session_state.auth = False; st.rerun()
 
     if st.session_state.current_page == "Homepage":
-        # --- TOP STATS ROW ---
+        # --- ALIGNED TOP STATS ROW ---
         s1, s2, s3, s4 = st.columns(4)
-        with s1: st.markdown('<div class="stat-box"><p class="stat-lbl">Patients Today</p><p class="stat-val">12</p></div>', unsafe_allow_html=True)
-        with s2: st.markdown('<div class="stat-box"><p class="stat-lbl">Surgeries</p><p class="stat-val">02</p></div>', unsafe_allow_html=True)
+        with s1: 
+            st.markdown('<div class="stat-box"><p class="stat-lbl">Patients Today</p><p class="stat-val">12</p></div>', unsafe_allow_html=True)
+        with s2: 
+            st.markdown('<div class="stat-box"><p class="stat-lbl">Surgeries</p><p class="stat-val">02</p></div>', unsafe_allow_html=True)
         with s3:
-            st.markdown('<div class="stat-box"><p class="stat-lbl">Urgent Alerts</p><p class="stat-val" style="color:#E57373;">03</p></div>', unsafe_allow_html=True)
+            # Combined Metric and Button for perfect alignment
+            st.markdown('<div class="stat-box" style="border-color: #E57373;"><p class="stat-lbl">Urgent Alerts</p><p class="stat-val" style="color:#E57373;">03</p></div>', unsafe_allow_html=True)
             if st.button("View Details", key="toggle_alerts"):
                 st.session_state.show_alerts = not st.session_state.show_alerts
                 st.rerun()
-        with s4: st.markdown('<div class="stat-box"><p class="stat-lbl">System Health</p><p class="stat-val">98%</p></div>', unsafe_allow_html=True)
+        with s4: 
+            st.markdown('<div class="stat-box"><p class="stat-lbl">System Health</p><p class="stat-val">98%</p></div>', unsafe_allow_html=True)
         
-        # DISPLAY URGENT ALERTS (TOGGLEABLE)
+        # DISPLAY URGENT ALERTS
         if st.session_state.show_alerts:
             st.markdown("#### 🚨 High Priority Notifications")
             ac1, ac2, ac3 = st.columns(3)
@@ -160,6 +181,7 @@ else:
                     st.markdown(f'<div class="alert-card"><strong>Room {p_alert["Room"]}</strong>: {p_alert["Name"]}<br><small>{p_alert["Issue"]}</small></div>', unsafe_allow_html=True)
             st.divider()
 
+        # REST OF THE HOMEPAGE (REMAINS EXACTLY THE SAME)
         col_main, col_plan = st.columns([2.2, 1], gap="large")
         with col_main:
             img_html = f'<img src="data:image/png;base64,{doctor_b64}" class="profile-img">' if doctor_b64 else '<div class="profile-img" style="background:#93C572; display:flex; align-items:center; justify-content:center; color:white; font-size:40px;">👨‍⚕️</div>'
@@ -168,27 +190,20 @@ else:
         with col_plan:
             st.markdown("### 📅 Calendar")
             selected_date = str(st.date_input("Schedule", label_visibility="collapsed"))
-            
-            if selected_date not in st.session_state.daily_tasks:
-                st.session_state.daily_tasks[selected_date] = []
-            if selected_date not in st.session_state.completed_counts:
-                st.session_state.completed_counts[selected_date] = 0
-
+            if selected_date not in st.session_state.daily_tasks: st.session_state.daily_tasks[selected_date] = []
+            if selected_date not in st.session_state.completed_counts: st.session_state.completed_counts[selected_date] = 0
             st.divider()
             st.markdown(f"### 📝 Planning: {selected_date}")
-            
-            new_task = st.text_input("Add task for this day", key=f"input_{selected_date}")
+            new_task = st.text_input("Add task", key=f"input_{selected_date}")
             if st.button("Add", key=f"btn_{selected_date}"):
                 if new_task:
                     st.session_state.daily_tasks[selected_date].append(new_task)
                     st.rerun()
-
-            current_tasks = st.session_state.daily_tasks[selected_date]
+            curr_tasks = st.session_state.daily_tasks[selected_date]
             comp_count = st.session_state.completed_counts[selected_date]
-            total = len(current_tasks) + comp_count
+            total = len(curr_tasks) + comp_count
             st.progress(comp_count / total if total > 0 else 0)
-            
-            for i, task in enumerate(current_tasks):
+            for i, task in enumerate(curr_tasks):
                 c1, c2 = st.columns([5, 1])
                 with c1: st.markdown(f'<div class="todo-item">{task}</div>', unsafe_allow_html=True)
                 with c2:
@@ -197,10 +212,8 @@ else:
                         st.session_state.completed_counts[selected_date] += 1
                         st.rerun()
 
-    elif st.session_state.current_page == "Reservation":
-        st.title("📅 Reservations"); st.table(RESERVATIONS_DB)
+    elif st.session_state.current_page == "Reservation": st.title("📅 Reservations"); st.table(RESERVATIONS_DB)
     elif st.session_state.current_page == "Community":
         st.title("🤝 Medical Community")
         for post in COMMUNITY_POSTS: st.markdown(f'<div class="profile-card" style="margin-bottom:15px;"><strong>{post["user"]}</strong>: {post["title"]}</div>', unsafe_allow_html=True)
-    elif st.session_state.current_page == "Messages":
-        st.title("✉️ Messages"); st.write(MESSAGES_DB)
+    elif st.session_state.current_page == "Messages": st.title("✉️ Messages"); st.write(MESSAGES_DB)
