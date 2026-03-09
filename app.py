@@ -13,7 +13,7 @@ st.set_page_config(
 
 # 2. GLOBAL DATA & VARIABLES (PRESERVED)
 user_name = "Dr. John Doe"
-GITHUB_RAW_URL = "https://raw.githubusercontent.com/your-username/your-repo/main/doctor_profile.jpg" 
+GITHUB_RAW_URL = "https://raw.githubusercontent.com/your-username/your-repo/main/doctor_profile.png" 
 
 DOCTOR_BIO = {
     "title": "Senior Consultant Cardiologist",
@@ -61,7 +61,7 @@ def get_base64(file_path):
 logo_b64 = get_base64("logo_medical.png")
 doctor_b64 = get_base64_from_url(GITHUB_RAW_URL)
 if not doctor_b64:
-    doctor_b64 = get_base64("doctor_profile.jpg")
+    doctor_b64 = get_base64("doctor_profile.png")
 
 # 4. SESSION STATE (PRESERVED)
 if "auth" not in st.session_state:
@@ -85,7 +85,7 @@ if "daily_tasks" not in st.session_state:
 if "completed_counts" not in st.session_state:
     st.session_state.completed_counts = {}
 
-# 5. CSS (PRESERVED COLOR DESIGN)
+# 5. CSS (PRESERVED GRADIENT & DESIGN)
 st.markdown(f"""
     <style>
     [data-testid="stHeader"] {{ display: none; }}
@@ -93,7 +93,7 @@ st.markdown(f"""
         background: radial-gradient(circle at top right, #F9FFF9, #FDFDFD) !important;
     }}
     
-    /* YOUR GREEN GRADIENT SIDEBAR */
+    /* SIDEBAR GREEN GRADIENT */
     [data-testid="stSidebar"] {{ 
         background-image: linear-gradient(180deg, #E8F5E9 0%, #C8E6C9 100%) !important; 
     }}
@@ -107,7 +107,6 @@ st.markdown(f"""
     
     .profile-card {{ background: white; padding: 40px; border-radius: 35px; border: 1px solid #E0E0E0; box-shadow: 0 15px 50px rgba(0,0,0,0.05); }}
     .profile-img {{ width: 140px; height: 140px; border-radius: 30px; object-fit: cover; border: 4px solid #93C572; }}
-    .cert-tag {{ background: #E8F5E9; color: #2E7D32; padding: 6px 14px; border-radius: 20px; font-size: 11px; font-weight: 600; margin: 4px; display: inline-block; border: 1px solid #C8E6C9; }}
     
     .alert-card {{ background: #FFF5F5; border-left: 5px solid #E57373; padding: 15px; border-radius: 12px; margin-bottom: 10px; }}
     .todo-item {{ background:#F1F8E9; padding:12px; border-radius:12px; border-left:5px solid #93C572; margin-bottom:10px; }}
@@ -124,7 +123,7 @@ if not st.session_state.auth:
         if st.form_submit_button("AUTHENTICATE SYSTEM"):
             if u == "doctor1" and p == "mediflow2026": st.session_state.auth = True; st.rerun()
 else:
-    # --- UPDATED SYMBOL MENU BAR ---
+    # --- SYMBOL MENU BAR ---
     with st.sidebar:
         if logo_b64: st.image(f"data:image/png;base64,{logo_b64}", use_container_width=True)
         st.divider()
@@ -150,7 +149,7 @@ else:
             if st.button("Manage Alerts", use_container_width=True): st.session_state.show_alerts = not st.session_state.show_alerts; st.rerun()
         with s4: st.markdown('<div class="stat-box"><p class="stat-lbl">System Health</p><p class="stat-val">98%</p></div>', unsafe_allow_html=True)
         
-        # URGENT ALERTS (PRESERVED)
+        # URGENT ALERTS (DISMISS LOGIC PRESERVED)
         if st.session_state.show_alerts:
             st.markdown("#### 🚨 Active Urgent Cases")
             for idx, p_alert in enumerate(st.session_state.urgent_patients):
