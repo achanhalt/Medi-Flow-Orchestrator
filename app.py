@@ -21,27 +21,25 @@ st.markdown(f"""
     <style>
     .stApp {{ background-color: #FFFFFF !important; }}
 
-    /* LOGIN PAGE ANIMATION */
+    /* KEYFRAMES */
     @keyframes loginEntrance {{
         from {{ opacity: 0; transform: scale(0.95); }}
         to {{ opacity: 1; transform: scale(1); }}
     }}
 
-    /* DASHBOARD ENTRANCE (Samsung Style) */
     @keyframes samsungSlideUp {{
-        from {{ opacity: 0; transform: translateY(100px); }}
+        from {{ opacity: 0; transform: translateY(80px); }}
         to {{ opacity: 1; transform: translateY(0); }}
     }}
 
-    .login-container {{
-        animation: loginEntrance 0.7s ease-out forwards;
-    }}
-
-    .dashboard-container {{
-        animation: samsungSlideUp 0.8s cubic-bezier(0.165, 0.84, 0.44, 1) forwards;
-    }}
+    /* CLASSES */
+    .login-container {{ animation: loginEntrance 0.7s ease-out forwards; }}
     
-    /* UI ELEMENTS */
+    .stagger-1 {{ animation: samsungSlideUp 0.6s cubic-bezier(0.165, 0.84, 0.44, 1) forwards; opacity: 0; }}
+    .stagger-2 {{ animation: samsungSlideUp 0.6s cubic-bezier(0.165, 0.84, 0.44, 1) 0.15s forwards; opacity: 0; }}
+    .stagger-3 {{ animation: samsungSlideUp 0.6s cubic-bezier(0.165, 0.84, 0.44, 1) 0.3s forwards; opacity: 0; }}
+
+    /* UI STYLING */
     div[data-baseweb="input"], div[data-baseweb="textarea"] {{
         background-color: #FFFFFF !important;
         border: 2px solid #93C572 !important;
@@ -61,13 +59,7 @@ st.markdown(f"""
         box-shadow: 0 20px 40px rgba(0,0,0,0.05);
     }}
 
-    .mflo-header {{ 
-        color: #124D41; 
-        font-size: 55px; 
-        font-weight: 900; 
-        margin: 0; 
-        letter-spacing: -2px; 
-    }}
+    .mflo-header {{ color: #124D41; font-size: 55px; font-weight: 900; margin: 0; letter-spacing: -2px; }}
 
     div.stButton > button {{
         background: linear-gradient(90deg, #98FFD9, #7CFFCC) !important;
@@ -81,12 +73,14 @@ st.markdown(f"""
         transition: all 0.3s ease;
     }}
     
-    div.stButton > button:hover {{
-        transform: scale(1.02);
-        box-shadow: 0 10px 20px rgba(152, 255, 217, 0.5);
-    }}
+    div.stButton > button:hover {{ transform: scale(1.02); box-shadow: 0 10px 20px rgba(152, 255, 217, 0.5); }}
 
     label p {{ color: #124D41 !important; font-weight: bold !important; }}
+    
+    /* Progress Bar Theme */
+    div[data-testid="stProgress"] > div > div > div > div {{
+        background-color: #93C572 !important;
+    }}
     </style>
     """, unsafe_allow_html=True)
 
@@ -94,7 +88,6 @@ if "auth" not in st.session_state:
     st.session_state.auth = False
 
 if not st.session_state.auth:
-    # WRAP LOGIN IN ANIMATION DIV
     st.markdown('<div class="login-container">', unsafe_allow_html=True)
     st.markdown("<br><br><br>", unsafe_allow_html=True)
     
@@ -105,9 +98,7 @@ if not st.session_state.auth:
             {logo_html}
             <div style="color: #93C572; font-weight: 800; font-size: 28px; letter-spacing: 1px; margin-top: 10px;">67+2 PODCAST</div>
             <div class="mflo-header">M-FLO</div>
-            <p style="color: #124D41; font-size: 16px; font-weight: 500; opacity: 0.8;">
-                Medi-Flow Orchestrator v2.1 | Secure Portal
-            </p>
+            <p style="color: #124D41; font-size: 16px; font-weight: 500; opacity: 0.8;">Medi-Flow Orchestrator v2.1 | Secure Portal</p>
             <hr style="border-top: 2px solid #93C572; opacity: 0.2; margin: 30px 0;">
         </div>
     """, unsafe_allow_html=True)
@@ -119,8 +110,10 @@ if not st.session_state.auth:
         
         if st.button("AUTHENTICATE SYSTEM"):
             if u == "doctor1" and p == "mediflow2026":
-                with st.spinner("Authorizing..."):
-                    time.sleep(0.8) # Critical for animation feel
+                progress_bar = st.progress(0)
+                for i in range(101):
+                    time.sleep(0.01) # Smooth fill
+                    progress_bar.progress(i)
                 st.session_state.auth = True
                 st.rerun()
             else:
@@ -128,9 +121,6 @@ if not st.session_state.auth:
     st.markdown('</div>', unsafe_allow_html=True)
 
 else:
-    # WRAP DASHBOARD IN SLIDE-UP ANIMATION DIV
-    st.markdown('<div class="dashboard-container">', unsafe_allow_html=True)
-    
     with st.sidebar:
         if logo_b64:
             st.markdown(f'<div style="text-align:center;"><img src="data:image/png;base64,{logo_b64}" width="120"></div>', unsafe_allow_html=True)
@@ -146,21 +136,25 @@ else:
     c1, c2, c3 = st.columns([1, 2, 2])
     
     with c1:
+        st.markdown('<div class="stagger-1">', unsafe_allow_html=True)
         st.markdown("#### Patient Context")
         with st.container(border=True):
             st.markdown("### **J. Doe**")
             st.caption("ID: #8821 | Male | 45yo")
             st.error("⚠️ ALLERGY: Penicillin")
             st.warning("⚠️ CONDITION: Hypertension")
+        st.markdown('</div>', unsafe_allow_html=True)
 
     with c2:
+        st.markdown('<div class="stagger-2">', unsafe_allow_html=True)
         st.markdown("#### Clinical Interface")
         notes = st.text_area("Live Transcript", height=350, placeholder="Type notes here...")
         if st.button("EXECUTE ANALYSIS"):
             st.toast("Intents Detected")
+        st.markdown('</div>', unsafe_allow_html=True)
 
     with c3:
+        st.markdown('<div class="stagger-3">', unsafe_allow_html=True)
         st.markdown("#### AI-Generated Orders")
         st.info("Awaiting analysis...")
-    
-    st.markdown('</div>', unsafe_allow_html=True)
+        st.markdown('</div>', unsafe_allow_html=True)
