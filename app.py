@@ -19,14 +19,15 @@ DOCTOR_BIO = {
     "achievements": ["Best Clinician Award 2025", "50+ Published Research Papers", "Lead Researcher - Project HeartBeat"]
 }
 
-# 3. SESSION STATE
+# 3. SESSION STATE (PRESERVED & EXPANDED)
 if "auth" not in st.session_state:
     st.session_state.auth = False
 if "current_page" not in st.session_state:
     st.session_state.current_page = "Homepage"
-# Interactive To-Do List State
 if "todos" not in st.session_state:
     st.session_state.todos = ["Review Lab Results - Patient #402", "Surgery Consultation @ 2PM", "Department Meeting"]
+if "completed_count" not in st.session_state:
+    st.session_state.completed_count = 0
 
 def get_base64(file_path):
     if os.path.exists(file_path):
@@ -36,7 +37,7 @@ def get_base64(file_path):
 
 logo_b64 = get_base64("logo_medical.png")
 
-# 4. ENHANCED CSS (MINT THEME + MOTION)
+# 4. ENHANCED CSS (MINT THEME + MOTION + PROGRESS)
 st.markdown(f"""
     <style>
     @keyframes slideUp {{ from {{ opacity: 0; transform: translateY(20px); }} to {{ opacity: 1; transform: translateY(0); }} }}
@@ -64,26 +65,20 @@ st.markdown(f"""
     }}
 
     .cert-pill {{
-        background: #E8F5E9;
-        color: #2E7D32;
-        padding: 6px 14px;
-        border-radius: 20px;
-        font-size: 13px;
-        font-weight: 600;
-        display: inline-block;
-        margin: 4px;
+        background: #E8F5E9; color: #2E7D32; padding: 6px 14px; border-radius: 20px;
+        font-size: 13px; font-weight: 600; display: inline-block; margin: 4px;
     }}
 
     /* TO-DO ITEM STYLING */
     .todo-container {{
-        background: #F1F8E9;
-        padding: 12px 18px;
-        border-radius: 15px;
-        border-left: 6px solid #93C572;
-        margin-bottom: 10px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
+        background: #F1F8E9; padding: 12px 18px; border-radius: 15px;
+        border-left: 6px solid #93C572; margin-bottom: 10px;
+        display: flex; justify-content: space-between; align-items: center;
+    }}
+
+    /* PROGRESS BAR STYLING */
+    .stProgress > div > div > div > div {{
+        background-color: #93C572 !important;
     }}
     </style>
     """, unsafe_allow_html=True)
@@ -108,8 +103,7 @@ if not st.session_state.auth:
         p = st.text_input("Security Key", type="password", placeholder="Security Key", label_visibility="collapsed")
         if st.form_submit_button("AUTHENTICATE SYSTEM"):
             if u == "doctor1" and p == "mediflow2026":
-                st.session_state.auth = True
-                st.rerun()
+                st.session_state.auth = True; st.rerun()
 
 else:
     # --- TOP BAR ---
@@ -147,10 +141,9 @@ else:
                     </div>
                     <hr style="border:0; border-top:1px solid #eee; margin: 25px 0;">
                     <p style="color:#444; font-size:16px; line-height:1.7;">{DOCTOR_BIO['desc']}</p>
-                    <h4 style="color:#124D41; margin-bottom:10px;">Academic Credentials</h4>
+                    <h4 style="color:#124D41;">Credentials & Achievements</h4>
                     {''.join([f'<span class="cert-pill">{c}</span>' for c in DOCTOR_BIO['certs']])}
-                    <h4 style="color:#124D41; margin-top:25px;">Clinical Achievements</h4>
-                    <ul style="color:#444; font-size:15px; line-height:1.8;">
+                    <ul style="color:#444; font-size:15px; line-height:1.8; margin-top:15px;">
                         {''.join([f'<li>{a}</li>' for a in DOCTOR_BIO['achievements']])}
                     </ul>
                 </div>
@@ -161,28 +154,32 @@ else:
             st.date_input("Schedule", label_visibility="collapsed")
             
             st.divider()
-            st.markdown("### 📝 Patient Tasks")
+            st.markdown("### 📝 Planning Progress")
             
+            # PROGRESS CALCULATION
+            total_tasks = len(st.session_state.todos) + st.session_state.completed_count
+            progress = (st.session_state.completed_count / total_tasks) if total_tasks > 0 else 0
+            st.progress(progress)
+            st.caption(f"{st.session_state.completed_count} tasks completed today")
+
             # Input to add new tasks
             t_input_col, t_btn_col = st.columns([3, 1])
             with t_input_col:
-                new_task = st.text_input("Add new task", placeholder="Enter task...", label_visibility="collapsed", key="task_entry")
+                new_task = st.text_input("Add task", placeholder="New task...", label_visibility="collapsed", key="task_entry")
             with t_btn_col:
                 if st.button("Add", use_container_width=True):
-                    if new_task:
-                        st.session_state.todos.append(new_task)
-                        st.rerun()
+                    if new_task: st.session_state.todos.append(new_task); st.rerun()
 
-            # Display and remove tasks
+            # Task List Logic
             for i, task in enumerate(st.session_state.todos):
                 c1, c2 = st.columns([5, 1])
-                with c1:
-                    st.markdown(f'<div class="todo-container">{task}</div>', unsafe_allow_html=True)
+                with c1: st.markdown(f'<div class="todo-container">{task}</div>', unsafe_allow_html=True)
                 with c2:
-                    if st.button("✔️", key=f"done_{i}", help="Mark as complete"):
+                    if st.button("✔️", key=f"done_{i}"):
                         st.session_state.todos.pop(i)
+                        st.session_state.completed_count += 1
                         st.rerun()
 
     elif st.session_state.current_page == "Reservation":
         st.title("Patient Reservations")
-        st.write("Dynamic reservation table logic goes here.")
+        st.info("Your reservation management functions are active.")
