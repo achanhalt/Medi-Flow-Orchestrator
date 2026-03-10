@@ -3,6 +3,8 @@ import base64
 import os
 import requests
 from datetime import date, datetime
+# --- NEW: ACTUAL AI IMPORT ---
+import google.generativeai as genai 
 
 # 1. PAGE SETUP
 st.set_page_config(
@@ -10,6 +12,26 @@ st.set_page_config(
     page_icon="⚕️", 
     layout="wide"
 )
+
+# --- NEW: AI CONFIGURATION ---
+# Replace 'YOUR_API_KEY' with your actual key from Google AI Studio
+API_KEY = "YOUR_API_KEY" 
+genai.configure(api_key=API_KEY)
+model = genai.GenerativeModel('gemini-1.5-flash')
+
+def get_ai_response(title, content):
+    """Function to call actual Gemini AI"""
+    try:
+        prompt = f"""
+        You are a professional medical AI assistant within the M-FLO Clinical Workspace. 
+        A doctor has posted a discussion titled '{title}' with the following content: '{content}'.
+        Provide a concise, professional, and helpful clinical insight or a follow-up question.
+        Keep the response under 60 words.
+        """
+        response = model.generate_content(prompt)
+        return f"[🤖 AI ASSISTANT]: {response.text}"
+    except Exception as e:
+        return f"[🤖 AI ASSISTANT]: I'm currently processing other data. (Error: {str(e)})"
 
 # 2. GLOBAL DATA & VARIABLES (PRESERVED)
 user_name = "Dr. John Doe"
@@ -140,7 +162,6 @@ st.markdown(f"""
     .notif-text {{ flex-grow: 1; font-size: 14px; color: #333; }}
     .notif-time {{ font-size: 11px; color: #888; }}
     
-    /* NEW AI STYLE */
     .ai-comment {{ border-left: 4px solid #2196F3 !important; background: #E3F2FD !important; color: #0D47A1 !important; }}
     </style>
     """, unsafe_allow_html=True)
@@ -295,26 +316,25 @@ else:
         with c_left:
             search_query = st.text_input("🔍 Search medical discussions...", placeholder="e.g. Hypertension, UI, AI")
             
-            # --- UPDATED: POSTING WITH AI AUTO-REPLY ---
             with st.expander("➕ Create New Post"):
                 new_title = st.text_input("Title")
                 new_content = st.text_area("What's on your mind, Doctor?")
                 if st.button("Post to Community"):
                     if new_title and new_content:
-                        # 1. Generate the AI Response String
-                        ai_response = f"[🤖 AI ASSISTANT]: Hello {user_name}, I've analyzed your question regarding '{new_title}'. Based on recent clinical data, you might want to look into the latest ESC guidelines. Other doctors will be able to provide further peer-review soon."
+                        # --- MODIFIED: CALLING ACTUAL AI ---
+                        with st.spinner("AI is analyzing your post..."):
+                            ai_comment = get_ai_response(new_title, new_content)
                         
-                        # 2. Insert post with AI as first comment
                         new_post = {
                             "user": user_name, 
                             "role": user_role, 
                             "title": new_title, 
                             "content": new_content, 
                             "likes": 0, 
-                            "comments": [ai_response] # AI answers first
+                            "comments": [ai_comment]
                         }
                         st.session_state.community_posts.insert(0, new_post)
-                        st.success("Post published! AI Assistant has provided an initial reply.")
+                        st.success("Post published with AI feedback!")
                         st.rerun()
 
             filtered_posts = [p for p in st.session_state.community_posts if search_query.lower() in p['title'].lower() or search_query.lower() in p['content'].lower()]
@@ -338,7 +358,6 @@ else:
                 with b2:
                     with st.expander(f"View {len(post['comments'])} Comments"):
                         for c in post['comments']:
-                            # Style AI comments differently
                             ai_style = 'class="comment-bubble ai-comment"' if "[🤖 AI ASSISTANT]" in c else 'class="comment-bubble"'
                             st.markdown(f'<div {ai_style}>{c}</div>', unsafe_allow_html=True)
                         
@@ -346,8 +365,6 @@ else:
                         if st.button("Post", key=f"com_btn_{idx}"):
                             if new_com: 
                                 post['comments'].append(f"{user_name}: {new_com}")
-                                if post['user'] == user_name:
-                                    st.session_state.notifications.insert(0, {"type": "community", "text": f"Someone has replied on your post: '{new_com[:20]}...'", "time": "Just now", "unread": True})
                                 st.rerun()
 
                 if post['user'] == user_name:
