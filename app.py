@@ -37,7 +37,7 @@ if "community_posts" not in st.session_state:
         {"user": "Dr. Robert Chen", "role": "Internal Medicine Specialist", "title": "AI in Chest X-Rays", "content": "New algorithm for detecting small pleural effusions showing 98% accuracy.", "likes": 89, "comments": ["Is this FDA approved?"]}
     ]
 
-# NEW: Notifications Database (Replaces Messages)
+# Notifications Database
 if "notifications" not in st.session_state:
     st.session_state.notifications = [
         {"type": "community", "text": "Dr. Sarah Smith has replied on your post in community", "time": "2 mins ago", "unread": True},
@@ -94,7 +94,7 @@ if "daily_tasks" not in st.session_state:
 if "completed_counts" not in st.session_state:
     st.session_state.completed_counts = {}
 
-# 5. CSS (PRESERVED + FIXED NOTIFICATION STYLES)
+# 5. CSS (PRESERVED)
 st.markdown(f"""
     <style>
     @keyframes fadeIn {{ from {{ opacity: 0; transform: translateY(20px); }} to {{ opacity: 1; transform: translateY(0); }} }}
@@ -129,7 +129,6 @@ st.markdown(f"""
     .alert-card {{ background: #FFF5F5; border-left: 5px solid #E57373; padding: 15px; border-radius: 12px; margin-bottom: 10px; }}
     .todo-item {{ background:#F1F8E9; padding:12px; border-radius:12px; border-left:5px solid #93C572; margin-bottom:10px; }}
 
-    /* NOTIFICATION SPECIFIC CSS (FIXED BRACES) */
     .notif-card {{
         background: white; border-radius: 12px; padding: 15px; margin-bottom: 10px;
         border-left: 5px solid #E0E0E0; display: flex; align-items: center; gap: 15px;
@@ -167,7 +166,6 @@ else:
         if st.button("🏠 Homepage", key="nav_h", use_container_width=True): st.session_state.current_page = "Homepage"
         if st.button("📅 Reservation", key="nav_r", use_container_width=True): st.session_state.current_page = "Reservation"
         
-        # Sidebar: Notifications Label
         unread_count = sum(1 for n in st.session_state.notifications if n['unread'])
         btn_label = f"🔔 Notifications ({unread_count})" if unread_count > 0 else "🔔 Notifications"
         if st.button(btn_label, key="nav_n", use_container_width=True): st.session_state.current_page = "Notifications"
@@ -185,6 +183,20 @@ else:
 
     if st.session_state.current_page == "Homepage":
         st.markdown(f'<p style="color:#124D41; font-weight:700; font-size:18px;">Hello, {user_name} 👋</p>', unsafe_allow_html=True)
+        
+        # --- AUTOMATED LAB RESULT SIMULATOR ---
+        with st.expander("🛠️ Clinical Simulation Tools"):
+            if st.button("📥 Simulate Incoming Lab Results"):
+                new_notif = {
+                    "type": "clinical", 
+                    "text": "New Lab Results: Patient Alice Tan (Hematology Panel)", 
+                    "time": "Just now", 
+                    "unread": True
+                }
+                st.session_state.notifications.insert(0, new_notif)
+                st.success("New Lab Result notification pushed!")
+                st.rerun()
+
         s1, s2, s3, s4 = st.columns(4)
         with s1: st.markdown(f'<div class="stat-box"><p class="stat-lbl">Consultations</p><p class="stat-val">{count_patients:02d}</p></div>', unsafe_allow_html=True)
         with s2: st.markdown(f'<div class="stat-box"><p class="stat-lbl">Follow-ups</p><p class="stat-val">{count_followups:02d}</p></div>', unsafe_allow_html=True)
@@ -249,13 +261,21 @@ else:
                         st.session_state.daily_tasks[selected_date].pop(i)
                         st.session_state.completed_counts[selected_date] += 1; st.rerun()
 
-    # NOTIFICATIONS PAGE
     elif st.session_state.current_page == "Notifications":
         st.title("🔔 Notifications")
-        if st.button("Clear all read notifications"):
-            st.session_state.notifications = [n for n in st.session_state.notifications if n['unread']]
-            st.rerun()
-            
+        
+        n_col1, n_col2 = st.columns([1.5, 4])
+        with n_col1:
+            if st.button("✔️ Mark All as Read", use_container_width=True):
+                for n in st.session_state.notifications:
+                    n['unread'] = False
+                st.rerun()
+        with n_col2:
+            if st.button("🗑️ Clear Read Notifications", use_container_width=True):
+                st.session_state.notifications = [n for n in st.session_state.notifications if not (n['unread'] == False)]
+                st.rerun()
+        st.divider()
+
         for idx, n in enumerate(st.session_state.notifications):
             unread_class = "notif-unread" if n['unread'] else ""
             icon = "💬" if n['type'] == "community" else "🩺"
