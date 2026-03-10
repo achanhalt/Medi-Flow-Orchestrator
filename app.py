@@ -303,7 +303,14 @@ else:
         st.title("👥 Patient Clinical Records")
         st.markdown("Search the hospital database to begin a new consultation session.")
         
-        ic_input = st.text_input("🔍 Enter Patient IC Number", placeholder="XXXXXX-XX-XXXX")
+        # Adding columns for search layout
+        ps_col1, ps_col2 = st.columns([3, 1])
+        with ps_col1:
+            ic_input = st.text_input("🔍 Enter Patient IC Number", placeholder="XXXXXX-XX-XXXX")
+        with ps_col2:
+            st.markdown("<br>", unsafe_allow_html=True)
+            if st.button("Clear Search", use_container_width=True):
+                st.rerun()
 
         if ic_input:
             if ic_input in st.session_state.patient_db:
@@ -539,4 +546,20 @@ else:
     # --- PAGE: RESERVATION ---
     elif st.session_state.current_page == "Reservation": 
         st.title("📅 Reservations")
-        st.table(RESERVATIONS_DB)
+        
+        # Creating a more structured column-based view for reservations
+        r_head1, r_head2, r_head3 = st.columns([1, 2, 1])
+        with r_head1: st.markdown("**Time Slot**")
+        with r_head2: st.markdown("**Patient Name**")
+        with r_head3: st.markdown("**Booking Status**")
+        st.divider()
+
+        for res in RESERVATIONS_DB:
+            r_col1, r_col2, r_col3 = st.columns([1, 2, 1])
+            with r_col1:
+                st.write(res["Time"])
+            with r_col2:
+                st.write(res["Patient"])
+            with r_col3:
+                status_color = "#2E7D32" if res["Status"] == "Confirmed" else "#EF6C00"
+                st.markdown(f"<span style='color:{status_color}; font-weight:bold;'>{res['Status']}</span>", unsafe_allow_html=True)
