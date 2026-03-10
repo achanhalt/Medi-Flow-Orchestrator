@@ -13,12 +13,10 @@ st.set_page_config(
 
 # 2. GLOBAL DATA & VARIABLES (PRESERVED)
 user_name = "Dr. John Doe"
-user_role = "Consultant Physician" 
-
 GITHUB_RAW_URL = "https://raw.githubusercontent.com/your-username/your-repo/main/doctor_profile.jpg" 
 
 DOCTOR_BIO = {
-    "title": user_role,
+    "title": "Consultant Physician",
     "specialty": "Internal Medicine & Diagnostics",
     "desc": """Dr. John Doe is a world-renowned specialist in structural heart disease with over 15 years of clinical excellence. 
     He pioneered the use of minimally invasive valve replacements at M-FLO General and currently serves as the Head of Cardiovascular Research.""",
@@ -30,14 +28,15 @@ DOCTOR_BIO = {
     ]
 }
 
-# UPDATED: Posts now store both 'user' and 'role'
+# UPDATED: Expanded Community Posts with Metadata
 if "community_posts" not in st.session_state:
     st.session_state.community_posts = [
-        {"user": "Dr. Phang Lee You", "role": "Senior Consultant Cardiologist", "title": "Hypertension resistance protocols", "content": "Recent studies suggest that double-blocking RAAS might be more effective in Stage 2 patients...", "likes": 42, "comments": ["Very insightful!", "What about ACEi side effects?"]},
-        {"user": "Dr. Sarah Smith", "role": "Head of Radiology", "title": "M-FLO v2.1 Beta Feedback", "content": "The new UI is much cleaner. I love the heartbeat animation on the alerts.", "likes": 15, "comments": ["Agreed!", "Can we get a dark mode?"]},
-        {"user": "Dr. Robert Chen", "role": "Internal Medicine Specialist", "title": "AI in Chest X-Rays", "content": "New algorithm for detecting small pleural effusions showing 98% accuracy.", "likes": 89, "comments": ["Is this FDA approved?"]}
+        {"user": "u/Cardio_Lead", "title": "Hypertension resistance protocols", "content": "Recent studies suggest that double-blocking RAAS might be more effective in Stage 2 patients...", "likes": 42, "comments": ["Very insightful!", "What about ACEi side effects?"]},
+        {"user": "u/Heart_Monitor", "title": "M-FLO v2.1 Beta Feedback", "content": "The new UI is much cleaner. I love the heartbeat animation on the alerts.", "likes": 15, "comments": ["Agreed!", "Can we get a dark mode?"]},
+        {"user": "u/Radiology_Pro", "title": "AI in Chest X-Rays", "content": "New algorithm for detecting small pleural effusions showing 98% accuracy.", "likes": 89, "comments": ["Is this FDA approved?"]}
     ]
 
+# NEW: Follower State
 if "following_list" not in st.session_state:
     st.session_state.following_list = set()
 
@@ -91,7 +90,7 @@ if "daily_tasks" not in st.session_state:
 if "completed_counts" not in st.session_state:
     st.session_state.completed_counts = {}
 
-# 5. CSS (PRESERVED)
+# 5. CSS (PRESERVED + REDDIT UI STYLES)
 st.markdown(f"""
     <style>
     @keyframes fadeIn {{ from {{ opacity: 0; transform: translateY(20px); }} to {{ opacity: 1; transform: translateY(0); }} }}
@@ -110,7 +109,7 @@ st.markdown(f"""
         transition: border 0.2s ease;
     }}
     .reddit-card:hover {{ border-color: #93C572; }}
-    .reddit-user {{ font-size: 13px; color: #124D41; font-weight: 700; }}
+    .reddit-user {{ font-size: 12px; color: #787C7E; font-weight: 700; }}
     .reddit-title {{ font-size: 18px; font-weight: 600; color: #1A1A1B; margin: 5px 0; }}
     .reddit-content {{ font-size: 14px; color: #1A1A1B; line-height: 1.5; margin-bottom: 10px; }}
     .reddit-meta {{ font-size: 13px; color: #878A8C; font-weight: 700; display: flex; gap: 15px; }}
@@ -144,7 +143,9 @@ else:
     # --- PHYSICIAN LOGIC ---
     today_str = date.today().strftime("%Y-%m-%d")
     current_tasks = st.session_state.daily_tasks.get(today_str, [])
-    
+    count_patients = sum(1 for task in current_tasks if any(x in task.lower() for x in ["patient", "consult"]))
+    count_followups = sum(1 for task in current_tasks if any(x in task.lower() for x in ["follow", "review"]))
+
     with st.sidebar:
         if logo_b64: st.image(f"data:image/png;base64,{logo_b64}", use_container_width=True)
         st.divider()
@@ -153,6 +154,7 @@ else:
         if st.button("✉️ Messages", key="nav_m", use_container_width=True): st.session_state.current_page = "Messages"
         if st.button("🤝 Community", key="nav_c", use_container_width=True): st.session_state.current_page = "Community"
         
+        # --- NEW: Sidebar Following List ---
         if st.session_state.following_list:
             st.divider()
             st.markdown("👨‍⚕️ **Following**")
@@ -163,9 +165,70 @@ else:
         if st.button("🚪 Logout", key="nav_l", use_container_width=True): st.session_state.auth = False; st.rerun()
 
     if st.session_state.current_page == "Homepage":
-        # (Homepage code remains untouched)
         st.markdown(f'<p style="color:#124D41; font-weight:700; font-size:18px;">Hello, {user_name} 👋</p>', unsafe_allow_html=True)
-        # ... Rest of Homepage ...
+        s1, s2, s3, s4 = st.columns(4)
+        with s1: st.markdown(f'<div class="stat-box"><p class="stat-lbl">Consultations</p><p class="stat-val">{count_patients:02d}</p></div>', unsafe_allow_html=True)
+        with s2: st.markdown(f'<div class="stat-box"><p class="stat-lbl">Follow-ups</p><p class="stat-val">{count_followups:02d}</p></div>', unsafe_allow_html=True)
+        with s3:
+            alert_count = len(st.session_state.urgent_patients)
+            color = "#E57373" if alert_count > 0 else "#93C572"
+            pulse_class = "pulse-alert" if alert_count > 0 else ""
+            st.markdown(f'<div class="stat-box {pulse_class}" style="border-color:{color};"><p class="stat-lbl">Urgent Alerts</p><p class="stat-val" style="color:{color};">{alert_count:02d}</p></div>', unsafe_allow_html=True)
+            if st.button("Manage Alerts", key="manage_alerts", use_container_width=True):
+                st.session_state.show_alerts = not st.session_state.show_alerts; st.rerun()
+        with s4: st.markdown('<div class="stat-box"><p class="stat-lbl">Clinic Health</p><p class="stat-val">98%</p></div>', unsafe_allow_html=True)
+        
+        if st.session_state.show_alerts:
+            st.markdown("#### 🚨 Active Urgent Cases")
+            for idx, p_alert in enumerate(st.session_state.urgent_patients):
+                ac1, ac2 = st.columns([4, 1])
+                with ac1: st.markdown(f'<div class="alert-card"><strong>Room {p_alert["Room"]}</strong>: {p_alert["Name"]} | <small>{p_alert["Issue"]}</small></div>', unsafe_allow_html=True)
+                with ac2: 
+                    if st.button("Resolve ✅", key=f"res_{idx}", use_container_width=True):
+                        st.session_state.urgent_patients.pop(idx); st.rerun()
+            st.divider()
+
+        col_main, col_plan = st.columns([2.2, 1], gap="large")
+        with col_main:
+            img_html = f'<img src="data:image/png;base64,{doctor_b64}" class="profile-img">' if doctor_b64 else '👨‍⚕️'
+            stats_html = "".join([f'<div class="mini-stat"><span class="mini-stat-val">{s["value"]}</span><span class="mini-stat-lbl">{s["label"]}</span></div>' for s in DOCTOR_BIO['stats']])
+            certs_html = "".join([f'<span class="cert-tag">{c}</span>' for c in DOCTOR_BIO['certs']])
+            st.markdown(f"""
+                <div class="profile-card">
+                    <div style="display:flex; align-items:flex-start; gap:35px;">{img_html}
+                        <div style="flex-grow:1;">
+                            <h1 style="margin:0; color:#124D41; font-size:32px;">{user_name}</h1>
+                            <p style="color:#93C572; font-weight:700; margin-bottom:15px; font-size:18px;">{DOCTOR_BIO['title']}</p>
+                            <div style="display:flex; gap:30px; border-top: 1px solid #f0f0f0; border-bottom: 1px solid #f0f0f0; padding: 15px 0; margin-bottom:15px;">{stats_html}</div>
+                            <p style="color:#555; line-height:1.6; font-size:15px; margin-bottom:20px;">{DOCTOR_BIO['desc']}</p>
+                            <h5 style="color:#124D41; margin-bottom:10px;">Board Certifications & Memberships</h5>
+                            <div style="margin-left:-4px;">{certs_html}</div>
+                        </div>
+                    </div>
+                </div>
+            """, unsafe_allow_html=True)
+            
+        with col_plan:
+            st.markdown("### 📅 Calendar")
+            selected_date = str(st.date_input("Schedule", label_visibility="collapsed"))
+            if selected_date not in st.session_state.daily_tasks: st.session_state.daily_tasks[selected_date] = []
+            if selected_date not in st.session_state.completed_counts: st.session_state.completed_counts[selected_date] = 0
+            st.divider()
+            st.markdown(f"### 📝 Planning: {selected_date}")
+            new_task = st.text_input("Add task", key=f"input_{selected_date}")
+            if st.button("Add", key=f"btn_{selected_date}"):
+                if new_task: st.session_state.daily_tasks[selected_date].append(new_task); st.rerun()
+            curr_tasks = st.session_state.daily_tasks[selected_date]
+            comp_count = st.session_state.completed_counts[selected_date]
+            total = len(curr_tasks) + comp_count
+            st.progress(comp_count / total if total > 0 else 0)
+            for i, task in enumerate(curr_tasks):
+                c1, c2 = st.columns([5, 1])
+                with c1: st.markdown(f'<div class="todo-item">{task}</div>', unsafe_allow_html=True)
+                with c2:
+                    if st.button("✔️", key=f"d_{selected_date}_{i}"):
+                        st.session_state.daily_tasks[selected_date].pop(i)
+                        st.session_state.completed_counts[selected_date] += 1; st.rerun()
 
     elif st.session_state.current_page == "Community":
         st.title("🤝 Medical Community")
@@ -180,20 +243,19 @@ else:
                 new_content = st.text_area("What's on your mind, Doctor?")
                 if st.button("Post to Community"):
                     if new_title and new_content:
-                        new_post = {"user": user_name, "role": user_role, "title": new_title, "content": new_content, "likes": 0, "comments": []}
+                        new_post = {"user": f"u/{user_name.replace(' ', '_')}", "title": new_title, "content": new_content, "likes": 0, "comments": []}
                         st.session_state.community_posts.insert(0, new_post); st.success("Post published!"); st.rerun()
 
             filtered_posts = [p for p in st.session_state.community_posts if search_query.lower() in p['title'].lower() or search_query.lower() in p['content'].lower()]
             
             for idx, post in enumerate(filtered_posts):
-                # --- PRESERVED FORMATTING WITH NEW METADATA STYLE ---
                 st.markdown(f"""
                     <div class="reddit-card">
-                        <div class="reddit-user">{post['user']} ({post.get('role', 'Fellow')}) • Posted by Colleague</div>
+                        <div class="reddit-user">{post['user']} • Posted by Fellow</div>
                         <div class="reddit-title">{post['title']}</div>
                         <div class="reddit-content">{post['content']}</div>
                         <div class="reddit-meta">
-                            <span>⬆️ {post['likes']} Engagement</span>
+                            <span>⬆️ {post['likes']} Karma</span>
                             <span>💬 {len(post['comments'])} Comments</span>
                         </div>
                     </div>
@@ -211,7 +273,8 @@ else:
                         if st.button("Post", key=f"com_btn_{idx}"):
                             if new_com: post['comments'].append(new_com); st.rerun()
                 
-                if post['user'] == user_name:
+                # PRESERVED: EDIT & DELETE LOGIC
+                if post['user'] == f"u/{user_name.replace(' ', '_')}":
                     with b3:
                         if st.button("Edit 📝", key=f"edit_btn_{idx}"):
                             st.session_state[f"editing_{idx}"] = True
@@ -239,9 +302,41 @@ else:
                                 st.session_state[f"editing_{idx}"] = False; st.rerun()
 
         with c_right:
-            # (Right column Top Contributors sidebar remains untouched)
+            st.markdown("### 🔥 Trending Topics")
+            trending = ["#Cardiology2026", "#AI_Diagnostics", "#MFLO_Updates"]
+            for tag in trending: st.button(tag, use_container_width=True)
+            st.divider()
+            
             st.markdown("### 🏆 Top Contributors")
-            # ... Rest of Community sidebar ...
+            contributors = [
+                {"name": "Dr. Phang Lee You", "role": "Senior Consultant Cardiologist", "karma": "2.4k", "bio": "Expert in Percutaneous Coronary Intervention (PCI)."},
+                {"name": "Dr. Sarah Smith", "role": "Head of Radiology", "karma": "1.8k", "bio": "Specializes in neuroimaging and AI-driven screening."},
+                {"name": "Dr. Robert Chen", "role": "Internal Medicine Specialist", "karma": "950", "bio": "Focuses on geriatric chronic care and diabetes management."}
+            ]
+            
+            for i, person in enumerate(contributors):
+                st.markdown(f"""
+                    <div style="background: white; border: 1px solid #EDEFF1; border-radius: 8px; padding: 10px; margin-bottom: 8px;">
+                        <div style="font-weight: 700; color: #124D41; font-size: 14px;">{person['name']}</div>
+                        <div style="font-size: 12px; color: #787C7E; font-style: italic; margin-bottom: 4px;">{person['role']}</div>
+                        <div style="font-size: 11px; color: #93C572; font-weight: 800;">{person['karma']} Karma Points</div>
+                    </div>
+                """, unsafe_allow_html=True)
+                
+                # --- UPDATED: Follow & View Profile ---
+                fb1, fb2 = st.columns(2)
+                with fb1:
+                    if st.button(f"Profile", key=f"p_btn_{i}", use_container_width=True):
+                        st.info(f"**Bio:** {person['bio']}")
+                with fb2:
+                    is_following = person['name'] in st.session_state.following_list
+                    btn_label = "Unfollow" if is_following else "Follow +"
+                    if st.button(btn_label, key=f"f_btn_{i}", use_container_width=True):
+                        if is_following:
+                            st.session_state.following_list.remove(person['name'])
+                        else:
+                            st.session_state.following_list.add(person['name'])
+                        st.rerun()
 
     elif st.session_state.current_page == "Reservation": st.title("📅 Reservations"); st.table(RESERVATIONS_DB)
     elif st.session_state.current_page == "Messages": st.title("✉️ Messages"); st.write(MESSAGES_DB)
