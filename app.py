@@ -13,10 +13,12 @@ st.set_page_config(
 
 # 2. GLOBAL DATA & VARIABLES (PRESERVED)
 user_name = "Dr. John Doe"
+user_role = "Consultant Physician" # Added role for current user
+
 GITHUB_RAW_URL = "https://raw.githubusercontent.com/your-username/your-repo/main/doctor_profile.jpg" 
 
 DOCTOR_BIO = {
-    "title": "Consultant Physician",
+    "title": user_role,
     "specialty": "Internal Medicine & Diagnostics",
     "desc": """Dr. John Doe is a world-renowned specialist in structural heart disease with over 15 years of clinical excellence. 
     He pioneered the use of minimally invasive valve replacements at M-FLO General and currently serves as the Head of Cardiovascular Research.""",
@@ -28,15 +30,15 @@ DOCTOR_BIO = {
     ]
 }
 
-# UPDATED: Expanded Community Posts with Metadata
+# UPDATED: Changed u/ handles to real Doctor names and Roles
 if "community_posts" not in st.session_state:
     st.session_state.community_posts = [
-        {"user": "u/Cardio_Lead", "title": "Hypertension resistance protocols", "content": "Recent studies suggest that double-blocking RAAS might be more effective in Stage 2 patients...", "likes": 42, "comments": ["Very insightful!", "What about ACEi side effects?"]},
-        {"user": "u/Heart_Monitor", "title": "M-FLO v2.1 Beta Feedback", "content": "The new UI is much cleaner. I love the heartbeat animation on the alerts.", "likes": 15, "comments": ["Agreed!", "Can we get a dark mode?"]},
-        {"user": "u/Radiology_Pro", "title": "AI in Chest X-Rays", "content": "New algorithm for detecting small pleural effusions showing 98% accuracy.", "likes": 89, "comments": ["Is this FDA approved?"]}
+        {"user": "Dr. Phang Lee You", "role": "Senior Consultant Cardiologist", "title": "Hypertension resistance protocols", "content": "Recent studies suggest that double-blocking RAAS might be more effective in Stage 2 patients...", "likes": 42, "comments": ["Very insightful!", "What about ACEi side effects?"]},
+        {"user": "Dr. Sarah Smith", "role": "Head of Radiology", "title": "M-FLO v2.1 Beta Feedback", "content": "The new UI is much cleaner. I love the heartbeat animation on the alerts.", "likes": 15, "comments": ["Agreed!", "Can we get a dark mode?"]},
+        {"user": "Dr. Robert Chen", "role": "Internal Medicine Specialist", "title": "AI in Chest X-Rays", "content": "New algorithm for detecting small pleural effusions showing 98% accuracy.", "likes": 89, "comments": ["Is this FDA approved?"]}
     ]
 
-# NEW: Follower State
+# NEW: Follower State (PRESERVED)
 if "following_list" not in st.session_state:
     st.session_state.following_list = set()
 
@@ -90,7 +92,7 @@ if "daily_tasks" not in st.session_state:
 if "completed_counts" not in st.session_state:
     st.session_state.completed_counts = {}
 
-# 5. CSS (PRESERVED + REDDIT UI STYLES)
+# 5. CSS (PRESERVED)
 st.markdown(f"""
     <style>
     @keyframes fadeIn {{ from {{ opacity: 0; transform: translateY(20px); }} to {{ opacity: 1; transform: translateY(0); }} }}
@@ -109,7 +111,7 @@ st.markdown(f"""
         transition: border 0.2s ease;
     }}
     .reddit-card:hover {{ border-color: #93C572; }}
-    .reddit-user {{ font-size: 12px; color: #787C7E; font-weight: 700; }}
+    .reddit-user {{ font-size: 13px; color: #124D41; font-weight: 700; }}
     .reddit-title {{ font-size: 18px; font-weight: 600; color: #1A1A1B; margin: 5px 0; }}
     .reddit-content {{ font-size: 14px; color: #1A1A1B; line-height: 1.5; margin-bottom: 10px; }}
     .reddit-meta {{ font-size: 13px; color: #878A8C; font-weight: 700; display: flex; gap: 15px; }}
@@ -140,7 +142,7 @@ if not st.session_state.auth:
             if u == "doctor1" and p == "mediflow2026":
                 st.session_state.auth = True; st.rerun()
 else:
-    # --- PHYSICIAN LOGIC ---
+    # --- PHYSICIAN LOGIC --- (PRESERVED)
     today_str = date.today().strftime("%Y-%m-%d")
     current_tasks = st.session_state.daily_tasks.get(today_str, [])
     count_patients = sum(1 for task in current_tasks if any(x in task.lower() for x in ["patient", "consult"]))
@@ -154,7 +156,6 @@ else:
         if st.button("✉️ Messages", key="nav_m", use_container_width=True): st.session_state.current_page = "Messages"
         if st.button("🤝 Community", key="nav_c", use_container_width=True): st.session_state.current_page = "Community"
         
-        # --- NEW: Sidebar Following List ---
         if st.session_state.following_list:
             st.divider()
             st.markdown("👨‍⚕️ **Following**")
@@ -243,19 +244,21 @@ else:
                 new_content = st.text_area("What's on your mind, Doctor?")
                 if st.button("Post to Community"):
                     if new_title and new_content:
-                        new_post = {"user": f"u/{user_name.replace(' ', '_')}", "title": new_title, "content": new_content, "likes": 0, "comments": []}
+                        # UPDATED: Post now uses real user name and role
+                        new_post = {"user": user_name, "role": user_role, "title": new_title, "content": new_content, "likes": 0, "comments": []}
                         st.session_state.community_posts.insert(0, new_post); st.success("Post published!"); st.rerun()
 
             filtered_posts = [p for p in st.session_state.community_posts if search_query.lower() in p['title'].lower() or search_query.lower() in p['content'].lower()]
             
             for idx, post in enumerate(filtered_posts):
+                # UPDATED: Display Name and Role instead of u/ ID
                 st.markdown(f"""
                     <div class="reddit-card">
-                        <div class="reddit-user">{post['user']} • Posted by Fellow</div>
+                        <div class="reddit-user">{post['user']} ({post.get('role', 'Fellow')}) • Posted by Colleague</div>
                         <div class="reddit-title">{post['title']}</div>
                         <div class="reddit-content">{post['content']}</div>
                         <div class="reddit-meta">
-                            <span>⬆️ {post['likes']} Karma</span>
+                            <span>⬆️ {post['likes']} Engagement</span>
                             <span>💬 {len(post['comments'])} Comments</span>
                         </div>
                     </div>
@@ -273,8 +276,8 @@ else:
                         if st.button("Post", key=f"com_btn_{idx}"):
                             if new_com: post['comments'].append(new_com); st.rerun()
                 
-                # PRESERVED: EDIT & DELETE LOGIC
-                if post['user'] == f"u/{user_name.replace(' ', '_')}":
+                # PRESERVED: Ownership check updated for real name
+                if post['user'] == user_name:
                     with b3:
                         if st.button("Edit 📝", key=f"edit_btn_{idx}"):
                             st.session_state[f"editing_{idx}"] = True
@@ -323,7 +326,6 @@ else:
                     </div>
                 """, unsafe_allow_html=True)
                 
-                # --- UPDATED: Follow & View Profile ---
                 fb1, fb2 = st.columns(2)
                 with fb1:
                     if st.button(f"Profile", key=f"p_btn_{i}", use_container_width=True):
