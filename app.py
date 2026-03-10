@@ -240,7 +240,7 @@ else:
             for idx, post in enumerate(filtered_posts):
                 st.markdown(f"""
                     <div class="reddit-card">
-                        <div class="reddit-user">{post['user']} • {datetime.now().strftime('%H:%M')}</div>
+                        <div class="reddit-user">{post['user']} • Posted by Fellow</div>
                         <div class="reddit-title">{post['title']}</div>
                         <div class="reddit-content">{post['content']}</div>
                         <div class="reddit-meta">
@@ -262,15 +262,27 @@ else:
                         if st.button("Post", key=f"com_btn_{idx}"):
                             if new_com: post['comments'].append(new_com); st.rerun()
                 
-                # --- NEW: EDIT & DELETE FUNCTIONS ---
+                # EDIT & DELETE LOGIC
                 if post['user'] == f"u/{user_name.replace(' ', '_')}":
                     with b3:
                         if st.button("Edit 📝", key=f"edit_btn_{idx}"):
                             st.session_state[f"editing_{idx}"] = True
                     with b4:
                         if st.button("Delete 🗑️", key=f"del_btn_{idx}"):
-                            st.session_state.community_posts.remove(post); st.rerun()
+                            st.session_state[f"confirm_del_{idx}"] = True
                     
+                    # --- NEW: CONFIRM DELETE POPUP ---
+                    if st.session_state.get(f"confirm_del_{idx}", False):
+                        st.warning("⚠️ Are you sure you want to delete this post?")
+                        col_y, col_n = st.columns([1, 4])
+                        with col_y:
+                            if st.button("Yes", key=f"conf_y_{idx}"):
+                                st.session_state.community_posts.remove(post)
+                                del st.session_state[f"confirm_del_{idx}"]; st.rerun()
+                        with col_n:
+                            if st.button("Cancel", key=f"conf_n_{idx}"):
+                                del st.session_state[f"confirm_del_{idx}"]; st.rerun()
+
                     if st.session_state.get(f"editing_{idx}", False):
                         with st.form(f"edit_form_{idx}"):
                             edit_title = st.text_input("New Title", value=post['title'])
