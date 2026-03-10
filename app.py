@@ -549,152 +549,152 @@ else:
         st.title("📅 Internal Specialist Referrals")
         st.markdown("Use this panel to find and book appointments with specialized internal clinical departments.")
 
-    # --- 1. DATA INITIALIZATION (Mock Databases for Demonstration) ---
-    # In a real SE project, this would be an API call or SQL query.
-    if 'clinic_specialists_db' not in st.session_state:
-        st.session_state.clinic_specialists_db = {
-            "Cardiology": [
-                {"id": "c1", "name": "Dr. Sarah Smith (Senior Consultant PCI)", "availability": ["09:00 AM", "10:00 AM", "11:00 AM", "02:00 PM"]},
-                {"id": "c2", "name": "Dr. Aris (Non-Invasive Diagnostics)", "availability": ["08:30 AM", "10:30 AM", "01:30 PM"]}
-            ],
-            "Radiology": [
-                {"id": "r1", "name": "Dr. Phang (Head of Imaging / MRI Specialist)", "availability": ["09:00 AM", "02:00 PM"]},
-                {"id": "r2", "name": "Dr. Lee (Ultrasound & CT Guidance)", "availability": ["11:00 AM", "03:00 PM", "04:00 PM"]}
-            ],
-            "Internal Medicine": [
-                {"id": "i1", "name": "Dr. Chen (Chronic Care & Diagnostics)", "availability": ["10:00 AM", "12:00 PM", "03:30 PM"]}
-            ]
-        }
+        # --- 1. DATA INITIALIZATION (Mock Databases for Demonstration) ---
+        # In a real SE project, this would be an API call or SQL query.
+        if 'clinic_specialists_db' not in st.session_state:
+            st.session_state.clinic_specialists_db = {
+                "Cardiology": [
+                    {"id": "c1", "name": "Dr. Sarah Smith (Senior Consultant PCI)", "availability": ["09:00 AM", "10:00 AM", "11:00 AM", "02:00 PM"]},
+                    {"id": "c2", "name": "Dr. Aris (Non-Invasive Diagnostics)", "availability": ["08:30 AM", "10:30 AM", "01:30 PM"]}
+                ],
+                "Radiology": [
+                    {"id": "r1", "name": "Dr. Phang (Head of Imaging / MRI Specialist)", "availability": ["09:00 AM", "02:00 PM"]},
+                    {"id": "r2", "name": "Dr. Lee (Ultrasound & CT Guidance)", "availability": ["11:00 AM", "03:00 PM", "04:00 PM"]}
+                ],
+                "Internal Medicine": [
+                    {"id": "i1", "name": "Dr. Chen (Chronic Care & Diagnostics)", "availability": ["10:00 AM", "12:00 PM", "03:30 PM"]}
+                ]
+            }
 
-    # Initialize Referrals list in session state if not existing
-    if 'referral_bookings_db' not in st.session_state:
-        st.session_state.referral_bookings_db = [] # Empty list to hold confirmed referals
+        # Initialize Referrals list in session state if not existing
+        if 'referral_bookings_db' not in st.session_state:
+            st.session_state.referral_bookings_db = [] # Empty list to hold confirmed referals
 
-    # --- 2. LAYOUT: Choose Department Panel (Matching split-view concept) ---
-    # col1 holds the input parameters, col2 displays the dynamic view/table
-    col_input, col_view = st.columns([1, 2], gap="large")
+        # --- 2. LAYOUT: Choose Department Panel (Matching split-view concept) ---
+        # col1 holds the input parameters, col2 displays the dynamic view/table
+        col_input, col_view = st.columns([1, 2], gap="large")
 
-    with col_input:
-        st.markdown(f"""
-            <div style="background:#F9FFF9; padding:25px; border-radius:15px; border:1px solid #E1EDD8; box-shadow: 0 4px 6px rgba(0,0,0,0.03);">
-                <h4 style="color:#124D41; margin-top:0;">1. Select Referral Target</h4>
-                <p style="font-size:14px; color:#555;">Choose the specialist department and doctor required for the patient.</p>
-            </div>
-        """, unsafe_allow_html=True)
+        with col_input:
+            st.markdown(f"""
+                <div style="background:#F9FFF9; padding:25px; border-radius:15px; border:1px solid #E1EDD8; box-shadow: 0 4px 6px rgba(0,0,0,0.03);">
+                    <h4 style="color:#124D41; margin-top:0;">1. Select Referral Target</h4>
+                    <p style="font-size:14px; color:#555;">Choose the specialist department and doctor required for the patient.</p>
+                </div>
+            """, unsafe_allow_html=True)
         
-        # --- REFERRAL FINDER FORM ---
-        with st.form("referral_finder_form"):
-            # A. Select Department
-            departments = list(st.session_state.clinic_specialists_db.keys())
-            selected_dept = st.selectbox("Department", departments)
+            # --- REFERRAL FINDER FORM ---
+            with st.form("referral_finder_form"):
+                # A. Select Department
+                departments = list(st.session_state.clinic_specialists_db.keys())
+                selected_dept = st.selectbox("Department", departments)
 
-            # B. Filter Specialist Doctors based on Dept selection (Dynamic mapping)
-            available_specialists = st.session_state.clinic_specialists_db.get(selected_dept, [])
-            # Map name for dropdown display
-            spec_names = [spec["name"] for spec in available_specialists]
-            selected_spec_name = st.selectbox("Available Specialist", spec_names)
+                # B. Filter Specialist Doctors based on Dept selection (Dynamic mapping)
+                available_specialists = st.session_state.clinic_specialists_db.get(selected_dept, [])
+                # Map name for dropdown display
+                spec_names = [spec["name"] for spec in available_specialists]
+                selected_spec_name = st.selectbox("Available Specialist", spec_names)
 
-            submitted_find = st.form_submit_button("Find Booking Slots")
+                submitted_find = st.form_submit_button("Find Booking Slots")
 
-    with col_view:
-        st.markdown(f"""
-            <div style="background:#F9FFF9; padding:25px; border-radius:15px; border:1px solid #E1EDD8; box-shadow: 0 4px 6px rgba(0,0,0,0.03);">
-                <h4 style="color:#124D41; margin-top:0;">2. Booking & Archived Referrals</h4>
-            </div>
-        """, unsafe_allow_html=True)
+        with col_view:
+            st.markdown(f"""
+                <div style="background:#F9FFF9; padding:25px; border-radius:15px; border:1px solid #E1EDD8; box-shadow: 0 4px 6px rgba(0,0,0,0.03);">
+                    <h4 style="color:#124D41; margin-top:0;">2. Booking & Archived Referrals</h4>
+                </div>
+            """, unsafe_allow_html=True)
 
-        # --- PERSISTENCE LOGIC ---
-        # We save the search result in session state so it doesn't disappear when selecting a cell
-        if submitted_find:
-            st.session_state.active_spec_name = selected_spec_name
-            st.session_state.active_dept = selected_dept
+            # --- PERSISTENCE LOGIC ---
+            # We save the search result in session state so it doesn't disappear when selecting a cell
+            if submitted_find:
+                st.session_state.active_spec_name = selected_spec_name
+                st.session_state.active_dept = selected_dept
 
-        # --- DYNAMIC ACTION: Display Booking Interface ---
-        if 'active_spec_name' in st.session_state:
-            # Re-fetch the profile based on the stored state
-            active_dept = st.session_state.active_dept
-            available_specs = st.session_state.clinic_specialists_db.get(active_dept, [])
-            spec_profile = next((s for s in available_specs if s["name"] == st.session_state.active_spec_name), None)
+            # --- DYNAMIC ACTION: Display Booking Interface ---
+            if 'active_spec_name' in st.session_state:
+                # Re-fetch the profile based on the stored state
+                active_dept = st.session_state.active_dept
+                available_specs = st.session_state.clinic_specialists_db.get(active_dept, [])
+                spec_profile = next((s for s in available_specs if s["name"] == st.session_state.active_spec_name), None)
 
-            if spec_profile:
-                st.subheader(f"Booking slots for {st.session_state.active_spec_name}")
-                st.info(f"Targeting: {active_dept} Department")
+                if spec_profile:
+                    st.subheader(f"Booking slots for {st.session_state.active_spec_name}")
+                    st.info(f"Targeting: {active_dept} Department")
                 
-                # C. Display Slots using interactive dataframe
-                slots_df = pd.DataFrame(spec_profile["availability"], columns=["Available Time Slots"])
+                    # C. Display Slots using interactive dataframe
+                    slots_df = pd.DataFrame(spec_profile["availability"], columns=["Available Time Slots"])
                 
-                booking_table = st.dataframe(
-                    slots_df, 
+                    booking_table = st.dataframe(
+                        slots_df, 
+                        use_container_width=True, 
+                        hide_index=True,
+                        on_select="rerun", 
+                        selection_mode="single-cell"
+                    )
+                
+                    # D. Interactivity: Selection Logic
+                    selection_info = booking_table.selection.cells
+                
+                    # If a cell is selected, show the "Confirm Referral Details" from your mockup
+                    if selection_info:
+                        selected_row_idx = selection_info[0][0]
+                        selected_time = slots_df.iloc[selected_row_idx, 0]
+
+                        # This is the block from your image
+                        with st.expander("➕ Confirm Referral Details", expanded=True):
+                            st.markdown(f"Confirming this **{selected_time}** for specialist referral in **{active_dept}**.")
+                        
+                            st.text_input("Ref. Active Patient IC", value="950101-10-5543", disabled=True)
+                            ref_notes = st.text_area("Reason for Referral", placeholder="Enter clinical justification...")
+
+                            # CONFIRM BOOKING BUTTON
+                            if st.button("CONFIRM AND BOOK REFERRAL", key=f"book_{spec_profile['id']}_{selected_time}", type="primary"):
+                                if ref_notes:
+                                    new_referral = {
+                                        "Date_Booked": str(datetime.now().strftime("%Y-%m-%d")),
+                                        "Time_Slot": selected_time,
+                                        "Department": active_dept,
+                                        "Specialist": st.session_state.active_spec_name,
+                                        "Ref_Patient_IC": "950101-10-5543", 
+                                        "Referral_Reason": ref_notes,
+                                        "Booking_Status": "Confirmed"
+                                    }
+                                    # Save and Update
+                                    st.session_state.referral_bookings_db.append(new_referral)
+                                    spec_profile["availability"].remove(selected_time)
+                                
+                                    # Clear active search so view resets
+                                    del st.session_state.active_spec_name
+                                
+                                    st.success("✅ Referral booking confirmed and synced to M-FLO archive.")
+                                    st.rerun()
+                                else:
+                                    st.error("Please ensure the Referral Reason field is completed.")
+
+            # --- ARCHIVED REFERRALS (Shows if no active search or if history exists) ---
+            if st.session_state.referral_bookings_db and 'active_spec_name' not in st.session_state:
+                st.write("---")
+                st.subheader("Archived Referrals")
+                ref_df = pd.DataFrame(st.session_state.referral_bookings_db)
+                st.dataframe(ref_df, use_container_width=True, hide_index=True)
+            elif 'active_spec_name' not in st.session_state:
+                st.info("Please use the 'Referral Target' form on the left to locate specialist availability.")
+
+            # --- ARCHIVED REFERRALS (Table display concept) ---
+            elif st.session_state.referral_bookings_db:
+                st.write("---")
+                st.subheader("Archived Referrals")
+                st.markdown("Displaying all completed specialist referrals from this workspace.")
+            
+                # Creating DataFrame from the session state DB (referral_bookings_db)
+                ref_df = pd.DataFrame(st.session_state.referral_bookings_db)
+                st.dataframe(
+                    ref_df, 
                     use_container_width=True, 
                     hide_index=True,
-                    on_select="rerun", 
-                    selection_mode="single-cell"
+                    column_config={
+                        "Booking_Status": st.column_config.SelectboxColumn("Status", options=["Confirmed", "Completed", "Canceled"])
+                    }
                 )
-                
-                # D. Interactivity: Selection Logic
-                selection_info = booking_table.selection.cells
-                
-                # If a cell is selected, show the "Confirm Referral Details" from your mockup
-                if selection_info:
-                    selected_row_idx = selection_info[0][0]
-                    selected_time = slots_df.iloc[selected_row_idx, 0]
-
-                    # This is the block from your image
-                    with st.expander("➕ Confirm Referral Details", expanded=True):
-                        st.markdown(f"Confirming this **{selected_time}** for specialist referral in **{active_dept}**.")
-                        
-                        st.text_input("Ref. Active Patient IC", value="950101-10-5543", disabled=True)
-                        ref_notes = st.text_area("Reason for Referral", placeholder="Enter clinical justification...")
-
-                        # CONFIRM BOOKING BUTTON
-                        if st.button("CONFIRM AND BOOK REFERRAL", key=f"book_{spec_profile['id']}_{selected_time}", type="primary"):
-                            if ref_notes:
-                                new_referral = {
-                                    "Date_Booked": str(datetime.now().strftime("%Y-%m-%d")),
-                                    "Time_Slot": selected_time,
-                                    "Department": active_dept,
-                                    "Specialist": st.session_state.active_spec_name,
-                                    "Ref_Patient_IC": "950101-10-5543", 
-                                    "Referral_Reason": ref_notes,
-                                    "Booking_Status": "Confirmed"
-                                }
-                                # Save and Update
-                                st.session_state.referral_bookings_db.append(new_referral)
-                                spec_profile["availability"].remove(selected_time)
-                                
-                                # Clear active search so view resets
-                                del st.session_state.active_spec_name
-                                
-                                st.success("✅ Referral booking confirmed and synced to M-FLO archive.")
-                                st.rerun()
-                            else:
-                                st.error("Please ensure the Referral Reason field is completed.")
-
-        # --- ARCHIVED REFERRALS (Shows if no active search or if history exists) ---
-        if st.session_state.referral_bookings_db and 'active_spec_name' not in st.session_state:
-            st.write("---")
-            st.subheader("Archived Referrals")
-            ref_df = pd.DataFrame(st.session_state.referral_bookings_db)
-            st.dataframe(ref_df, use_container_width=True, hide_index=True)
-        elif 'active_spec_name' not in st.session_state:
-            st.info("Please use the 'Referral Target' form on the left to locate specialist availability.")
-
-        # --- ARCHIVED REFERRALS (Table display concept) ---
-        elif st.session_state.referral_bookings_db:
-            st.write("---")
-            st.subheader("Archived Referrals")
-            st.markdown("Displaying all completed specialist referrals from this workspace.")
-            
-            # Creating DataFrame from the session state DB (referral_bookings_db)
-            ref_df = pd.DataFrame(st.session_state.referral_bookings_db)
-            st.dataframe(
-                ref_df, 
-                use_container_width=True, 
-                hide_index=True,
-                column_config={
-                    "Booking_Status": st.column_config.SelectboxColumn("Status", options=["Confirmed", "Completed", "Canceled"])
-                }
-            )
 
         else:
             # Fallback UX before search
