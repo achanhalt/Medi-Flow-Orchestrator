@@ -100,7 +100,6 @@ st.markdown(f"""
     [data-testid="stHeader"] {{ background: rgba(0,0,0,0) !important; color: #124D41 !important; }}
     [data-testid="stAppViewContainer"] {{ background: radial-gradient(circle at top right, #F9FFF9, #FDFDFD) !important; }}
     
-    /* REDDIT STYLE CSS */
     .reddit-card {{
         background: white; border: 1px solid #EDEFF1; border-radius: 10px; padding: 15px; margin-bottom: 12px;
         transition: border 0.2s ease;
@@ -111,9 +110,6 @@ st.markdown(f"""
     .reddit-content {{ font-size: 14px; color: #1A1A1B; line-height: 1.5; margin-bottom: 10px; }}
     .reddit-meta {{ font-size: 13px; color: #878A8C; font-weight: 700; display: flex; gap: 15px; }}
     .comment-bubble {{ background: #F6F7F8; padding: 8px 12px; border-radius: 8px; margin-top: 5px; font-size: 13px; }}
-
-    /* POST COMPOSER STYLES */
-    .composer-box {{ background: white; border-radius: 10px; border: 1px solid #EDEFF1; padding: 15px; margin-bottom: 25px; }}
 
     .stat-box {{ background: #F1F8E9; border-radius: 20px; padding: 20px; text-align: center; border: 1px solid #E1EDD8; height: 120px; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: transform 0.3s ease; }}
     .stat-box:hover {{ transform: scale(1.05); }}
@@ -158,7 +154,6 @@ else:
         if st.button("🚪 Logout", key="nav_l", use_container_width=True): st.session_state.auth = False; st.rerun()
 
     if st.session_state.current_page == "Homepage":
-        # (PRESERVED HOMEPAGE LOGIC - ALERTS, STATS, PROFILE, CALENDAR)
         st.markdown(f'<p style="color:#124D41; font-weight:700; font-size:18px;">Hello, {user_name} 👋</p>', unsafe_allow_html=True)
         s1, s2, s3, s4 = st.columns(4)
         with s1: st.markdown(f'<div class="stat-box"><p class="stat-lbl">Consultations</p><p class="stat-val">{count_patients:02d}</p></div>', unsafe_allow_html=True)
@@ -227,30 +222,19 @@ else:
     elif st.session_state.current_page == "Community":
         st.title("🤝 Medical Community")
         
-        # --- NEW CODE: COMMUNITY LAYOUT (FEED + SIDEBAR) ---
         c_left, c_right = st.columns([2.5, 1], gap="large")
         
         with c_left:
-            # 1. SEARCH BAR
-            search_query = st.text_input("🔍 Search medical discussions...", placeholder="e.g. Hypertension, AI, Cardiology")
+            search_query = st.text_input("🔍 Search medical discussions...", placeholder="e.g. Hypertension, UI, AI")
             
-            # 2. CREATE POST COMPOSER
             with st.expander("➕ Create New Post"):
                 new_title = st.text_input("Title")
                 new_content = st.text_area("What's on your mind, Doctor?")
                 if st.button("Post to Community"):
                     if new_title and new_content:
-                        new_post = {
-                            "user": f"u/{user_name.replace(' ', '_')}", 
-                            "title": new_title, 
-                            "content": new_content, 
-                            "likes": 0, 
-                            "comments": []
-                        }
-                        st.session_state.community_posts.insert(0, new_post)
-                        st.success("Post published!"); st.rerun()
+                        new_post = {"user": f"u/{user_name.replace(' ', '_')}", "title": new_title, "content": new_content, "likes": 0, "comments": []}
+                        st.session_state.community_posts.insert(0, new_post); st.success("Post published!"); st.rerun()
 
-            # 3. FILTER AND DISPLAY POSTS
             filtered_posts = [p for p in st.session_state.community_posts if search_query.lower() in p['title'].lower() or search_query.lower() in p['content'].lower()]
             
             for idx, post in enumerate(filtered_posts):
@@ -266,8 +250,7 @@ else:
                     </div>
                 """, unsafe_allow_html=True)
                 
-                # INTERACTION BUTTONS
-                b1, b2, _ = st.columns([1, 2, 6])
+                b1, b2, b3, b4 = st.columns([1, 2, 1, 1])
                 with b1:
                     if st.button(f"Push ⬆️", key=f"like_{idx}"):
                         post['likes'] += 1; st.rerun()
@@ -278,23 +261,31 @@ else:
                         new_com = st.text_input("Add comment...", key=f"com_in_{idx}", label_visibility="collapsed")
                         if st.button("Post", key=f"com_btn_{idx}"):
                             if new_com: post['comments'].append(new_com); st.rerun()
+                
+                # --- NEW: EDIT & DELETE FUNCTIONS ---
+                if post['user'] == f"u/{user_name.replace(' ', '_')}":
+                    with b3:
+                        if st.button("Edit 📝", key=f"edit_btn_{idx}"):
+                            st.session_state[f"editing_{idx}"] = True
+                    with b4:
+                        if st.button("Delete 🗑️", key=f"del_btn_{idx}"):
+                            st.session_state.community_posts.remove(post); st.rerun()
+                    
+                    if st.session_state.get(f"editing_{idx}", False):
+                        with st.form(f"edit_form_{idx}"):
+                            edit_title = st.text_input("New Title", value=post['title'])
+                            edit_content = st.text_area("New Content", value=post['content'])
+                            if st.form_submit_button("Update Post"):
+                                post['title'], post['content'] = edit_title, edit_content
+                                st.session_state[f"editing_{idx}"] = False; st.rerun()
 
         with c_right:
-            # 4. TRENDING SIDEBAR
             st.markdown("### 🔥 Trending Topics")
-            trending = ["#Cardiology2026", "#AI_Diagnostics", "#MFLO_Updates", "#GrandRounds", "#MedicalResidency"]
-            for tag in trending:
-                if st.button(tag, use_container_width=True):
-                    # In a real app, this would trigger a filter
-                    pass
-            
+            trending = ["#Cardiology2026", "#AI_Diagnostics", "#MFLO_Updates"]
+            for tag in trending: st.button(tag, use_container_width=True)
             st.divider()
             st.markdown("### 🏆 Top Contributors")
-            st.markdown("""
-                * **u/Cardio_Lead** (2.4k Karma)
-                * **u/Radiology_Pro** (1.8k Karma)
-                * **u/Heart_Monitor** (950 Karma)
-            """)
+            st.markdown("* **u/Cardio_Lead** (2.4k Karma)\n* **u/Radiology_Pro** (1.8k Karma)")
 
     elif st.session_state.current_page == "Reservation": st.title("📅 Reservations"); st.table(RESERVATIONS_DB)
     elif st.session_state.current_page == "Messages": st.title("✉️ Messages"); st.write(MESSAGES_DB)
