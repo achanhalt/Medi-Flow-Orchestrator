@@ -1,6 +1,6 @@
 ﻿ID,Date,Condition,Test,Medicine,Dr,Status
-M001,2026-02-20,Gastritis,Physical Exam,Gaviscon 10ml,Dr. Robert Chen,Completed
-M002,2026-03-01,General Checkup,Vitals Check,Multivitamins,Dr. Sarah Smith,Completed
-M003,2026-03-05,Muscle Strain,Flexibility Test,Deep Heat / Panadol,Dr. Phang Lee You,Completed
-M004,2026-03-08,URTI (Cold),Lungs Auscultation,Cough Syrup / Paracetamol,Dr. Sarah Smith,Completed
-M006,2026-03-09,Allergic Rhinitis,None,Zyrtec 10mg,Dr. Robert Chen,Completed
+M001,2026-02-20,Gastritis,Physical Exam,Gaviscon 10ml,Dr. Robert Chen,Pending
+M002,2026-03-01,General Checkup,Vitals Check,Multivitamins,Dr. Sarah Smith,Pending
+M003,2026-03-05,Muscle Strain,Flexibility Test,Deep Heat / Panadol,Dr. Phang Lee You,Pending
+M004,2026-03-08,URTI (Cold),Lungs Auscultation,Cough Syrup / Paracetamol,Dr. Sarah Smith,Pending
+M006,2026-03-09,Allergic Rhinitis,None,Zyrtec 10mg,Dr. Robert Chen,Pending
