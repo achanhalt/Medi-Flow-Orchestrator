@@ -37,7 +37,7 @@ if "community_posts" not in st.session_state:
         {"user": "Dr. Robert Chen", "role": "Internal Medicine Specialist", "title": "AI in Chest X-Rays", "content": "New algorithm for detecting small pleural effusions showing 98% accuracy.", "likes": 89, "comments": ["Is this FDA approved?"]}
     ]
 
-# Notifications Database
+# NEW: Notifications Database (Replaces Messages)
 if "notifications" not in st.session_state:
     st.session_state.notifications = [
         {"type": "community", "text": "Dr. Sarah Smith has replied on your post in community", "time": "2 mins ago", "unread": True},
@@ -53,12 +53,6 @@ RESERVATIONS_DB = [
     {"Time": "09:00 AM", "Patient": "Alice Tan", "Status": "Confirmed"},
     {"Time": "11:30 AM", "Patient": "Bob Smith", "Status": "Pending"}
 ]
-
-# PRESERVED MESSAGES_DB
-MESSAGES_DB = {
-    "Dr. Sarah Smith": ["Hello Doctor, regarding the lab results...", "I've updated the patient chart."],
-    "Nurse Mike": ["Patient in Room 402 is ready for rounds.", "Vitals are stable."]
-}
 
 # 3. FILE ENCODING (PRESERVED)
 def get_base64_from_url(url):
@@ -100,7 +94,7 @@ if "daily_tasks" not in st.session_state:
 if "completed_counts" not in st.session_state:
     st.session_state.completed_counts = {}
 
-# 5. CSS (PRESERVED)
+# 5. CSS (PRESERVED + FIXED NOTIFICATION STYLES)
 st.markdown(f"""
     <style>
     @keyframes fadeIn {{ from {{ opacity: 0; transform: translateY(20px); }} to {{ opacity: 1; transform: translateY(0); }} }}
@@ -135,6 +129,7 @@ st.markdown(f"""
     .alert-card {{ background: #FFF5F5; border-left: 5px solid #E57373; padding: 15px; border-radius: 12px; margin-bottom: 10px; }}
     .todo-item {{ background:#F1F8E9; padding:12px; border-radius:12px; border-left:5px solid #93C572; margin-bottom:10px; }}
 
+    /* NOTIFICATION SPECIFIC CSS (FIXED BRACES) */
     .notif-card {{
         background: white; border-radius: 12px; padding: 15px; margin-bottom: 10px;
         border-left: 5px solid #E0E0E0; display: flex; align-items: center; gap: 15px;
@@ -172,16 +167,10 @@ else:
         if st.button("🏠 Homepage", key="nav_h", use_container_width=True): st.session_state.current_page = "Homepage"
         if st.button("📅 Reservation", key="nav_r", use_container_width=True): st.session_state.current_page = "Reservation"
         
-        # --- NEW LOGIC: SHOW RED ALERT IN SIDEBAR ---
-        has_unread_notif = any(n['unread'] for n in st.session_state.notifications)
-        has_messages = len(MESSAGES_DB) > 0 # Assuming messages mean action is required
-        
-        notif_label = "🔔 Notifications"
-        if has_unread_notif or has_messages:
-            notif_label = "🔔 Notifications 🔴" # Visual indicator for alerts/messages
-            
-        if st.button(notif_label, key="nav_n", use_container_width=True): 
-            st.session_state.current_page = "Notifications"
+        # Sidebar: Notifications Label
+        unread_count = sum(1 for n in st.session_state.notifications if n['unread'])
+        btn_label = f"🔔 Notifications ({unread_count})" if unread_count > 0 else "🔔 Notifications"
+        if st.button(btn_label, key="nav_n", use_container_width=True): st.session_state.current_page = "Notifications"
         
         if st.button("🤝 Community", key="nav_c", use_container_width=True): st.session_state.current_page = "Community"
         
@@ -260,29 +249,26 @@ else:
                         st.session_state.daily_tasks[selected_date].pop(i)
                         st.session_state.completed_counts[selected_date] += 1; st.rerun()
 
+    # NOTIFICATIONS PAGE
     elif st.session_state.current_page == "Notifications":
-        st.title("🔔 Notifications & Messages")
-        
-        t1, t2 = st.tabs(["Alerts", "Direct Messages"])
-        with t1:
-            if st.button("Clear all read notifications"):
-                st.session_state.notifications = [n for n in st.session_state.notifications if n['unread']]
-                st.rerun()
-            for idx, n in enumerate(st.session_state.notifications):
-                unread_class = "notif-unread" if n['unread'] else ""
-                icon = "💬" if n['type'] == "community" else "🩺"
-                st.markdown(f"""
-                    <div class="notif-card {unread_class}">
-                        <div class="notif-icon">{icon}</div>
-                        <div class="notif-text">{n['text']}</div>
-                        <div class="notif-time">{n['time']}</div>
-                    </div>
-                """, unsafe_allow_html=True)
-                if n['unread']:
-                    if st.button(f"Mark as read", key=f"read_{idx}"):
-                        n['unread'] = False; st.rerun()
-        with t2:
-            st.write(MESSAGES_DB)
+        st.title("🔔 Notifications")
+        if st.button("Clear all read notifications"):
+            st.session_state.notifications = [n for n in st.session_state.notifications if n['unread']]
+            st.rerun()
+            
+        for idx, n in enumerate(st.session_state.notifications):
+            unread_class = "notif-unread" if n['unread'] else ""
+            icon = "💬" if n['type'] == "community" else "🩺"
+            st.markdown(f"""
+                <div class="notif-card {unread_class}">
+                    <div class="notif-icon">{icon}</div>
+                    <div class="notif-text">{n['text']}</div>
+                    <div class="notif-time">{n['time']}</div>
+                </div>
+            """, unsafe_allow_html=True)
+            if n['unread']:
+                if st.button(f"Mark as read", key=f"read_{idx}"):
+                    n['unread'] = False; st.rerun()
 
     elif st.session_state.current_page == "Community":
         st.title("🤝 Medical Community")
@@ -323,14 +309,8 @@ else:
                         if st.button("Post", key=f"com_btn_{idx}"):
                             if new_com: 
                                 post['comments'].append(new_com)
-                                # NEW LOGIC: Trigger "Red" Alert for replies on user posts
                                 if post['user'] == user_name:
-                                    st.session_state.notifications.insert(0, {
-                                        "type": "community", 
-                                        "text": f"New reply on your post: '{new_com[:30]}...'", 
-                                        "time": "Just now", 
-                                        "unread": True
-                                    })
+                                    st.session_state.notifications.insert(0, {"type": "community", "text": f"Someone has replied on your post: '{new_com[:20]}...'", "time": "Just now", "unread": True})
                                 st.rerun()
 
                 if post['user'] == user_name:
