@@ -2,6 +2,7 @@ import streamlit as st
 import base64
 import os
 import requests
+import pandas as pd
 from datetime import date, datetime
 import google.generativeai as genai
 
