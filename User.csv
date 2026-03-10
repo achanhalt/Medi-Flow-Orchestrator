@@ -1,5 +1,3 @@
-﻿Username,Password
-doctor1,mediflow2026
-doctor2,doctor02
-doctor3,doctor03
-doctor4,doctor04
+﻿Username,Password,Picture,Name,Role,Description,Certificate
+doctor1,mediflow2026,doctor1_profile.jpg,John Doe,Consultant Physician,Dr. John Doe is a world-renowned specialist in structural heart disease with over 15 years of clinical excellence. He pioneered the use of minimally invasive valve replacements at M-FLO General and currently serves as the Head of Cardiovascular Research.,MD Harvard Medical School
+doctor2,doctor02,doctor2_profile.jpg,Alexandra,Consultant Physician,Dr. Alexandra is a highly respected specialist in advanced cardiovascular imaging with more than 12 years of clinical experience. She is known for her contributions to non-invasive diagnostic technologies and has led several innovative research initiatives at M-FLO General currently serving as the Director of Diagnostic Innovation.,Board Certified in Cardiovascular Disease
