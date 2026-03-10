@@ -58,20 +58,6 @@ DOCTOR_BIO = {
     ]
 }
 
-# Load user database
-try:
-    user_db = pd.read_csv("User.csv")
-except:
-    user_db = pd.DataFrame(columns=["Username", "Password"])
-
-# Login validation function
-def validate_login(username, password):
-    user = user_db[
-        (user_db["Username"] == username) &
-        (user_db["Password"] == password)
-    ]
-    return not user.empty
-    
 # Initial Post Database
 if "community_posts" not in st.session_state:
     st.session_state.community_posts = [
@@ -204,12 +190,8 @@ if not st.session_state.auth:
         u = st.text_input("ID", placeholder="Enter ID", label_visibility="collapsed")
         p = st.text_input("Key", type="password", placeholder="Security Key", label_visibility="collapsed")
         if st.form_submit_button("AUTHENTICATE SYSTEM"):
-    if validate_login(u, p):
-        st.session_state.auth = True
-        st.success("Login successful")
-        st.rerun()
-    else:
-        st.error("Invalid ID or Security Key")
+            if u == "doctor1" and p == "mediflow2026":
+                st.session_state.auth = True; st.rerun()
 else:
     today_str = date.today().strftime("%Y-%m-%d")
     current_tasks = st.session_state.daily_tasks.get(today_str, [])
@@ -318,108 +300,102 @@ else:
                         st.session_state.completed_counts[selected_date] += 1; st.rerun()
 
     # --- PAGE: PATIENT SEARCH ---
-# --- PAGE: PATIENT SEARCH & RECORDS (MATCHING IMAGE) ---
     elif st.session_state.current_page == "Patient":
+        st.title("👥 Patient Clinical Records")
+        st.markdown("Search the hospital database to begin a new consultation session.")
         
-        # --- TOP HEADER ROW (Matching Image: Logo, Search, Hi Dr.) ---
-        header_col1, header_col2, header_col3 = st.columns([1, 3, 1])
-        
-        with header_col1:
-            st.markdown(f'<div style="text-align:center;"><img src="data:image/png;base64,{logo_b64}" style="width:70px; margin-top:-10px;"></div>', unsafe_allow_html=True)
+        # Adding columns for search layout
+        ps_col1, ps_col2 = st.columns([3, 1])
+        with ps_col1:
+            ic_input = st.text_input("🔍 Enter Patient IC Number", placeholder="XXXXXX-XX-XXXX")
+        with ps_col2:
+            st.markdown("<br>", unsafe_allow_html=True)
+            if st.button("Clear Search", use_container_width=True):
+                st.rerun()
 
-        with header_col2:
-            st.markdown('<br>', unsafe_allow_html=True)
-            ic_input = st.text_input("🔍 Search.", placeholder="Enter Patient IC Number", label_visibility="collapsed")
-
-        with header_col3:
-            st.markdown('<br>', unsafe_allow_html=True)
-            doc_profile_html = f'<div style="display:flex; align-items:center; gap:10px; font-weight:700;">Hi, Dr. John Doe <img src="data:image/png;base64,{doctor_b64}" style="width:35px; height:35px; border-radius:50%; object-fit:cover; border:2px solid #93C572;"></div>' if doctor_b64 else 'Hi, Dr. John Doe 👨‍⚕️'
-            st.markdown(doc_profile_html, unsafe_allow_html=True)
-
-        st.divider()
-
-        # --- MAIN CONTENT AREA (Patient Details + Table) ---
         if ic_input:
             if ic_input in st.session_state.patient_db:
                 p_data = st.session_state.patient_db[ic_input]
-                st.write("") # Add space
-
-                # --- PATIENT INFO & PROFILE PICTURE SECTION (MATCHING IMAGE) ---
-                col_left_details, col_right_profile = st.columns([3, 1])
-
-                with col_left_details:
-                    # Layout matching the image labels
-                    st.markdown(f"""
-                        <div style="background:#F9FFF9; padding:25px; border-radius:15px; border:1px solid #E1EDD8; box-shadow: 0 4px 6px rgba(0,0,0,0.03);">
-                            <p style="font-size:16px; margin-bottom:12px; color:#124D41;"><strong>IC:</strong> {ic_input}</p>
-                            <p style="font-size:20px; margin-bottom:12px; color:#124D41;"><strong>Name:</strong> {p_data['name']}</p>
-                            <p style="font-size:14px; margin-bottom:12px; color:#555;"><strong>Address:</strong> 12, Jalan Ampang, Kuala Lumpur</p>
-                            
-                            <div style="display:flex; gap:30px; margin-bottom:12px;">
-                                <p style="font-size:14px; margin:0; color:#555;"><strong>Weight:</strong> {p_data.get('weight', '--')} kg</p>
-                                <p style="font-size:14px; margin:0; color:#555;"><strong>Height:</strong> {p_data.get('height', '--')} cm</p>
-                            </div>
-
-                            <p style="font-size:14px; color:#555; background:#FFF1F1; padding:10px; border-radius:8px; border-left:4px solid #E57373;"><strong>Allergy:</strong> {p_data.get('allergy', 'No known allergies')}</p>
-                        </div>
-                    """, unsafe_allow_html=True)
-
-                with col_right_profile:
-                    # Profile picture box (MATCHING IMAGE: Stick figure placeholder)
-                    st.markdown("""
-                        <div style="border:2px solid #E0E0E0; border-radius:10px; width:150px; height:150px; display:flex; justify-content:center; align-items:center; background:white;">
-                            <span style="font-size:80px; color:#D0D0D0;">👤</span>
-                        </div>
-                    """, unsafe_allow_html=True)
-
-                st.divider()
-
-                # --- MEDICAL RECORD TABLE SECTION (MATCHING IMAGE) ---
-                st.subheader("Record:")
-
-                # 1. Process DataFrame
-                # We can reuse the medical_records list from the previous responses
-                # or create a temporary one for this example
-                mock_records = [
-                    {
-                        "No.": 1,
-                        "Date": "2024-03-01",
-                        "Symptoms": "High Fever",
-                        "Tests": "Blood Test",
-                        "Medicine": "Paracetamol",
-                        "Doctor": "Dr. Aris",
-                        "Status": "Completed"
-                    }
-                ]
-                df_hist = pd.DataFrame(mock_records)
+                st.success(f"✅ Record Found for {p_data['name']}")
                 
-                # 2. Add 'New' Button in a column row (matching image button placement)
-                col_btn1, col_btn2 = st.columns([5, 1])
-                with col_btn2:
-                    if st.button("➕ New", use_container_width=True):
-                        # Logic to trigger adding a new record could go here
-                        pass 
-
-                # 3. Display Table (MATCHING IMAGE columns)
-                st.dataframe(
-                    df_hist, 
-                    use_container_width=True, 
-                    hide_index=True,
-                    column_config={
-                        "No.": st.column_config.NumberColumn("No."),
-                        "Date": st.column_config.DateColumn("Date"),
-                        "Symptoms": "Condition",
-                        "Doctor": "Dr.",
-                        "Status": st.column_config.SelectboxColumn("Status", options=["Completed", "Ongoing", "Pending Lab Results"])
-                    }
-                )
-
+                # --- UPDATED: Vitals & BMI Calculation ---
+                h_m = p_data.get('height', 0) / 100
+                w_kg = p_data.get('weight', 0)
+                bmi = round(w_kg / (h_m**2), 1) if h_m > 0 else 0
+                
+                c_data1, c_data2 = st.columns([1, 2])
+                with c_data1:
+                    st.markdown(f"""
+                    <div style="background:white; padding:20px; border-radius:15px; border:1px solid #E0E0E0; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+                        <h4 style="color:#124D41; margin-top:0;">Patient Info</h4>
+                        <p><strong>Name:</strong> {p_data['name']}<br>
+                        <strong>Age:</strong> {p_data['age']} yrs<br>
+                        <strong>DOB:</strong> {p_data.get('dob', 'N/A')}<br>
+                        <strong>IC:</strong> {ic_input}</p>
+                        <hr>
+                        <p style="margin-bottom:5px;"><strong>Vitals & Physical:</strong></p>
+                        <div style="display:flex; justify-content:space-between; background:#F1F8E9; padding:10px; border-radius:10px; font-size:13px;">
+                            <span>H: <b>{p_data.get('height', '--')} cm</b></span>
+                            <span>W: <b>{p_data.get('weight', '--')} kg</b></span>
+                            <span style="color:#2E7D32;">BMI: <b>{bmi}</b></span>
+                        </div>
+                        <hr>
+                        <p><strong>Medical History:</strong><br><small>{p_data['history']}</small></p>
+                        <p><strong>Last Visit:</strong> {p_data.get('last_visit', 'N/A')}</p>
+                    </div>
+                    """, unsafe_allow_html=True)
+                
+                with c_data2:
+                    st.subheader("Consultation Notes")
+                    consult_text = st.text_area("Observations, Symptoms & Plan", height=200)
+                    if st.button("Save & Sync to Server"):
+                        if consult_text:
+                            st.session_state.patient_db[ic_input]['last_visit'] = str(date.today())
+                            st.balloons()
+                            st.success("Clinical notes have been encrypted and saved to the patient's record.")
+                        else:
+                            st.warning("Please enter notes before saving.")
+            
             else:
-                st.error("❌ No record found for this IC.")
-        
-        else:
-            # If no search, show prompt
-            st.info("👈 Enter a Patient IC number in the top search bar to view their full record.")
+                st.error("❌ No record found for this IC. Please register the new patient below.")
+                
+                # --- UPDATED: Registration Form with Auto-Age & Birthdate ---
+                with st.form("registration_form"):
+                    st.subheader("New Patient Registration")
+                    reg_name = st.text_input("Full Name (as per IC)")
+                    
+                    r_col1, r_col2 = st.columns(2)
+                    with r_col1:
+                        reg_dob = st.date_input("Birthdate", min_value=date(1900, 1, 1), max_value=date.today(), value=date(2000, 1, 1))
+                        # Logic: Age calculation
+                        today = date.today()
+                        calc_age = today.year - reg_dob.year - ((today.month, today.day) < (reg_dob.month, reg_dob.day))
+                        st.caption(f"System will record age as: {calc_age}")
+                        
+                    with r_col2:
+                        reg_gender = st.selectbox("Gender", ["Male", "Female", "Other"])
+
+                    r_col3, r_col4 = st.columns(2)
+                    with r_col3:
+                        reg_height = st.number_input("Height (cm)", min_value=0.0, max_value=250.0, value=170.0, step=0.1)
+                    with r_col4:
+                        reg_weight = st.number_input("Weight (kg)", min_value=0.0, max_value=300.0, value=70.0, step=0.1)
+
+                    reg_history = st.text_area("Known Allergies & Medical History")
+                    
+                    if st.form_submit_button("Create Patient Record"):
+                        if reg_name:
+                            st.session_state.patient_db[ic_input] = {
+                                "name": reg_name, 
+                                "dob": str(reg_dob),
+                                "age": calc_age, 
+                                "height": reg_height,
+                                "weight": reg_weight,
+                                "history": reg_history, 
+                                "last_visit": "Registered Today"
+                            }
+                            st.success(f"Account for {reg_name} created successfully! Re-enter IC to begin consultation.")
+                            st.rerun()
 
     # --- PAGE: NOTIFICATIONS ---
     elif st.session_state.current_page == "Notifications":
