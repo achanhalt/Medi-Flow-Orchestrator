@@ -1,7 +1,6 @@
 ﻿IC,Name,DOB,Gender,Height,Weight,Allerges,Age,BMI,Medical History,Last Vist
-040813140809,Lee Xiang Hui,13-8-2004,170,60,None,22, 1,Fever,2026-01-05
-920515105541,Siti Aminah,1992-05-15,Female,158,52,Peanuts,34, 1,Mild Hypertension,2026-02-15
-851210016633,Tan Ah Teck,1985-12-10,Male,175,85,Penicillin,41, 1,Type 2 Diabetes,2026-01-20
-980325147782,Arun Kumar,1998-03-25,Male,182,75,None,28, 1,Asthma,2026-03-05
-010704101124,Chloe Wong,2001-07-04,Female,165,48,Dust Mites,25, 1,Anemia,2026-02-28
-
+040813140809,Lee Xiang Hui,13-8-2004,Male,170,60,None,22, 1,Fever,2026-01-05
+920515105541,Siti Aminah,15-05-1992,Female,158,52,Peanuts,34, 1,Mild Hypertension,2026-02-15
+851210016633,Tan Ah Teck,10-12-1986,Male,175,85,Penicillin,41, 1,Type 2 Diabetes,2026-01-20
+980325147782,Arun Kumar,25-03-1998,Male,182,75,None,28, 1,Asthma,2026-03-05
+010704101124,Chloe Wong,04-07-2001,Female,165,48,Dust Mites,25, 1,Anemia,2026-02-28
