@@ -1,1 +1,3 @@
-﻿RID,Time,Patient,Specialist,Status
+﻿RID,Date,Time,Patient,Specialist,Status
+260001,15.03.2026,14:30,Angelababy,Cardiologists,Pending
+260002,20.03.2026,12:00,Bamboo,Oncologists,Pending
