@@ -28,10 +28,13 @@ DOCTOR_BIO = {
     ]
 }
 
-COMMUNITY_POSTS = [
-    {"user": "u/Cardio_Lead", "title": "Hypertension resistance protocols", "content": "Recent studies suggest..."},
-    {"user": "u/Heart_Monitor", "title": "M-FLO v2.1 Beta Feedback", "content": "The new UI is much cleaner..."}
-]
+# UPDATED: Expanded Community Posts with Metadata
+if "community_posts" not in st.session_state:
+    st.session_state.community_posts = [
+        {"user": "u/Cardio_Lead", "title": "Hypertension resistance protocols", "content": "Recent studies suggest that double-blocking RAAS might be more effective in Stage 2 patients...", "likes": 42, "comments": ["Very insightful!", "What about ACEi side effects?"]},
+        {"user": "u/Heart_Monitor", "title": "M-FLO v2.1 Beta Feedback", "content": "The new UI is much cleaner. I love the heartbeat animation on the alerts.", "likes": 15, "comments": ["Agreed!", "Can we get a dark mode?"]},
+        {"user": "u/Radiology_Pro", "title": "AI in Chest X-Rays", "content": "New algorithm for detecting small pleural effusions showing 98% accuracy.", "likes": 89, "comments": ["Is this FDA approved?"]}
+    ]
 
 RESERVATIONS_DB = [
     {"Time": "09:00 AM", "Patient": "Alice Tan", "Status": "Confirmed"},
@@ -79,84 +82,46 @@ if "urgent_patients" not in st.session_state:
     ]
 
 if "daily_tasks" not in st.session_state:
-    st.session_state.daily_tasks = {
-        str(date.today()): [] 
-    }
+    st.session_state.daily_tasks = {str(date.today()): []}
 if "completed_counts" not in st.session_state:
     st.session_state.completed_counts = {}
 
-# 5. CSS (PRESERVED + HEARTBEAT ANIMATION)
+# 5. CSS (PRESERVED + REDDIT UI STYLES)
 st.markdown(f"""
     <style>
-    /* ANIMATION KEYFRAMES */
-    @keyframes fadeIn {{
-        from {{ opacity: 0; transform: translateY(20px); }}
-        to {{ opacity: 1; transform: translateY(0); }}
-    }}
+    @keyframes fadeIn {{ from {{ opacity: 0; transform: translateY(20px); }} to {{ opacity: 1; transform: translateY(0); }} }}
+    @keyframes slideRight {{ from {{ opacity: 0; transform: translateX(-30px); }} to {{ opacity: 1; transform: translateX(0); }} }}
+    @keyframes heartbeat {{ 0% {{ transform: scale(1); }} 15% {{ transform: scale(1.08); }} 30% {{ transform: scale(1); }} 45% {{ transform: scale(1.08); }} 100% {{ transform: scale(1); }} }}
 
-    @keyframes slideRight {{
-        from {{ opacity: 0; transform: translateX(-30px); }}
-        to {{ opacity: 1; transform: translateX(0); }}
-    }}
+    [data-testid="stForm"], .profile-card, .stat-box, .reddit-card {{ animation: fadeIn 0.8s ease-out forwards; }}
+    .pulse-alert {{ animation: heartbeat 1.5s ease-in-out infinite; box-shadow: 0 0 15px rgba(229, 115, 115, 0.4); }}
+    .todo-item, .alert-card {{ animation: slideRight 0.5s ease-out forwards; }}
 
-    @keyframes heartbeat {{
-        0% {{ transform: scale(1); }}
-        15% {{ transform: scale(1.08); }}
-        30% {{ transform: scale(1); }}
-        45% {{ transform: scale(1.08); }}
-        100% {{ transform: scale(1); }}
-    }}
-
-    /* APPLYING ANIMATIONS */
-    [data-testid="stForm"], .profile-card {{
-        animation: fadeIn 0.8s ease-out forwards;
-    }}
+    [data-testid="stHeader"] {{ background: rgba(0,0,0,0) !important; color: #124D41 !important; }}
+    [data-testid="stAppViewContainer"] {{ background: radial-gradient(circle at top right, #F9FFF9, #FDFDFD) !important; }}
     
-    .stat-box {{
-        animation: fadeIn 0.8s ease-out forwards;
+    /* REDDIT STYLE CSS */
+    .reddit-card {{
+        background: white; border: 1px solid #EDEFF1; border-radius: 10px; padding: 15px; margin-bottom: 12px;
+        transition: border 0.2s ease;
     }}
+    .reddit-card:hover {{ border-color: #93C572; }}
+    .reddit-user {{ font-size: 12px; color: #787C7E; font-weight: 700; }}
+    .reddit-title {{ font-size: 18px; font-weight: 600; color: #1A1A1B; margin: 5px 0; }}
+    .reddit-content {{ font-size: 14px; color: #1A1A1B; line-height: 1.5; margin-bottom: 10px; }}
+    .reddit-meta {{ font-size: 13px; color: #878A8C; font-weight: 700; display: flex; gap: 15px; }}
+    .comment-bubble {{ background: #F6F7F8; padding: 8px 12px; border-radius: 8px; margin-top: 5px; font-size: 13px; }}
 
-    .pulse-alert {{
-        animation: heartbeat 1.5s ease-in-out infinite;
-        box-shadow: 0 0 15px rgba(229, 115, 115, 0.4);
-    }}
+    /* POST COMPOSER STYLES */
+    .composer-box {{ background: white; border-radius: 10px; border: 1px solid #EDEFF1; padding: 15px; margin-bottom: 25px; }}
 
-    .todo-item, .alert-card {{
-        animation: slideRight 0.5s ease-out forwards;
-    }}
-
-    /* PREVIOUS STYLES (PRESERVED) */
-    [data-testid="stHeader"] {{ 
-        background: rgba(0,0,0,0) !important; 
-        color: #124D41 !important;
-    }}
-    [data-testid="stHeader"] button {{
-        background-color: white !important;
-        border-radius: 50% !important;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.1) !important;
-        margin-left: 10px !important;
-    }}
-    [data-testid="stAppViewContainer"] {{
-        background: radial-gradient(circle at top right, #F9FFF9, #FDFDFD) !important;
-    }}
-    .stat-box {{ 
-        background: #F1F8E9; 
-        border-radius: 20px; padding: 20px; text-align: center; border: 1px solid #E1EDD8;
-        height: 120px; display: flex; flex-direction: column; justify-content: center; align-items: center;
-        transition: transform 0.3s ease;
-    }}
+    .stat-box {{ background: #F1F8E9; border-radius: 20px; padding: 20px; text-align: center; border: 1px solid #E1EDD8; height: 120px; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: transform 0.3s ease; }}
     .stat-box:hover {{ transform: scale(1.05); }}
     .stat-val {{ font-size: 24px; font-weight: 800; color: #124D41; margin: 0; }}
     .stat-lbl {{ font-size: 12px; color: #666; text-transform: uppercase; margin: 0; }}
-    .profile-card {{ 
-        background: white; padding: 40px; border-radius: 35px; border: 1px solid #E0E0E0; 
-        box-shadow: 0 15px 50px rgba(0,0,0,0.05); margin-top: 10px;
-    }}
+    .profile-card {{ background: white; padding: 40px; border-radius: 35px; border: 1px solid #E0E0E0; box-shadow: 0 15px 50px rgba(0,0,0,0.05); margin-top: 10px; }}
     .profile-img {{ width: 140px; height: 140px; border-radius: 30px; object-fit: cover; border: 4px solid #93C572; }}
     .cert-tag {{ background: #E8F5E9; color: #2E7D32; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 600; margin: 4px; display: inline-block; border: 1px solid #C8E6C9; }}
-    .mini-stat {{ text-align: center; padding: 10px; }}
-    .mini-stat-val {{ font-size: 18px; font-weight: 700; color: #124D41; display: block; }}
-    .mini-stat-lbl {{ font-size: 10px; color: #888; text-transform: uppercase; }}
     .alert-card {{ background: #FFF5F5; border-left: 5px solid #E57373; padding: 15px; border-radius: 12px; margin-bottom: 10px; }}
     .todo-item {{ background:#F1F8E9; padding:12px; border-radius:12px; border-left:5px solid #93C572; margin-bottom:10px; }}
     </style>
@@ -175,11 +140,11 @@ if not st.session_state.auth:
             if u == "doctor1" and p == "mediflow2026":
                 st.session_state.auth = True; st.rerun()
 else:
+    # --- PHYSICIAN LOGIC ---
     today_str = date.today().strftime("%Y-%m-%d")
     current_tasks = st.session_state.daily_tasks.get(today_str, [])
-    
-    count_patients = sum(1 for task in current_tasks if "patient" in task.lower() or "consult" in task.lower())
-    count_followups = sum(1 for task in current_tasks if "follow" in task.lower() or "review" in task.lower())
+    count_patients = sum(1 for task in current_tasks if any(x in task.lower() for x in ["patient", "consult"]))
+    count_followups = sum(1 for task in current_tasks if any(x in task.lower() for x in ["follow", "review"]))
 
     with st.sidebar:
         if logo_b64: st.image(f"data:image/png;base64,{logo_b64}", use_container_width=True)
@@ -193,15 +158,14 @@ else:
         if st.button("🚪 Logout", key="nav_l", use_container_width=True): st.session_state.auth = False; st.rerun()
 
     if st.session_state.current_page == "Homepage":
+        # (PRESERVED HOMEPAGE LOGIC - ALERTS, STATS, PROFILE, CALENDAR)
         st.markdown(f'<p style="color:#124D41; font-weight:700; font-size:18px;">Hello, {user_name} 👋</p>', unsafe_allow_html=True)
-
         s1, s2, s3, s4 = st.columns(4)
         with s1: st.markdown(f'<div class="stat-box"><p class="stat-lbl">Consultations</p><p class="stat-val">{count_patients:02d}</p></div>', unsafe_allow_html=True)
         with s2: st.markdown(f'<div class="stat-box"><p class="stat-lbl">Follow-ups</p><p class="stat-val">{count_followups:02d}</p></div>', unsafe_allow_html=True)
         with s3:
             alert_count = len(st.session_state.urgent_patients)
             color = "#E57373" if alert_count > 0 else "#93C572"
-            # Logic to add pulse class ONLY if alert_count > 0
             pulse_class = "pulse-alert" if alert_count > 0 else ""
             st.markdown(f'<div class="stat-box {pulse_class}" style="border-color:{color};"><p class="stat-lbl">Urgent Alerts</p><p class="stat-val" style="color:{color};">{alert_count:02d}</p></div>', unsafe_allow_html=True)
             if st.button("Manage Alerts", key="manage_alerts", use_container_width=True):
@@ -210,14 +174,12 @@ else:
         
         if st.session_state.show_alerts:
             st.markdown("#### 🚨 Active Urgent Cases")
-            if not st.session_state.urgent_patients: st.success("All clear!")
-            else:
-                for idx, p_alert in enumerate(st.session_state.urgent_patients):
-                    ac1, ac2 = st.columns([4, 1])
-                    with ac1: st.markdown(f'<div class="alert-card"><strong>Room {p_alert["Room"]}</strong>: {p_alert["Name"]} | <small>{p_alert["Issue"]}</small></div>', unsafe_allow_html=True)
-                    with ac2: 
-                        if st.button("Resolve ✅", key=f"res_{idx}", use_container_width=True):
-                            st.session_state.urgent_patients.pop(idx); st.rerun()
+            for idx, p_alert in enumerate(st.session_state.urgent_patients):
+                ac1, ac2 = st.columns([4, 1])
+                with ac1: st.markdown(f'<div class="alert-card"><strong>Room {p_alert["Room"]}</strong>: {p_alert["Name"]} | <small>{p_alert["Issue"]}</small></div>', unsafe_allow_html=True)
+                with ac2: 
+                    if st.button("Resolve ✅", key=f"res_{idx}", use_container_width=True):
+                        st.session_state.urgent_patients.pop(idx); st.rerun()
             st.divider()
 
         col_main, col_plan = st.columns([2.2, 1], gap="large")
@@ -227,14 +189,11 @@ else:
             certs_html = "".join([f'<span class="cert-tag">{c}</span>' for c in DOCTOR_BIO['certs']])
             st.markdown(f"""
                 <div class="profile-card">
-                    <div style="display:flex; align-items:flex-start; gap:35px;">
-                        {img_html}
+                    <div style="display:flex; align-items:flex-start; gap:35px;">{img_html}
                         <div style="flex-grow:1;">
                             <h1 style="margin:0; color:#124D41; font-size:32px;">{user_name}</h1>
                             <p style="color:#93C572; font-weight:700; margin-bottom:15px; font-size:18px;">{DOCTOR_BIO['title']}</p>
-                            <div style="display:flex; gap:30px; border-top: 1px solid #f0f0f0; border-bottom: 1px solid #f0f0f0; padding: 15px 0; margin-bottom:15px;">
-                                {stats_html}
-                            </div>
+                            <div style="display:flex; gap:30px; border-top: 1px solid #f0f0f0; border-bottom: 1px solid #f0f0f0; padding: 15px 0; margin-bottom:15px;">{stats_html}</div>
                             <p style="color:#555; line-height:1.6; font-size:15px; margin-bottom:20px;">{DOCTOR_BIO['desc']}</p>
                             <h5 style="color:#124D41; margin-bottom:10px;">Board Certifications & Memberships</h5>
                             <div style="margin-left:-4px;">{certs_html}</div>
@@ -265,8 +224,77 @@ else:
                         st.session_state.daily_tasks[selected_date].pop(i)
                         st.session_state.completed_counts[selected_date] += 1; st.rerun()
 
-    elif st.session_state.current_page == "Reservation": st.title("📅 Reservations"); st.table(RESERVATIONS_DB)
     elif st.session_state.current_page == "Community":
         st.title("🤝 Medical Community")
-        for post in COMMUNITY_POSTS: st.markdown(f'<div class="profile-card" style="margin-bottom:15px;"><strong>{post["user"]}</strong>: {post["title"]}</div>', unsafe_allow_html=True)
+        
+        # --- NEW CODE: COMMUNITY LAYOUT (FEED + SIDEBAR) ---
+        c_left, c_right = st.columns([2.5, 1], gap="large")
+        
+        with c_left:
+            # 1. SEARCH BAR
+            search_query = st.text_input("🔍 Search medical discussions...", placeholder="e.g. Hypertension, AI, Cardiology")
+            
+            # 2. CREATE POST COMPOSER
+            with st.expander("➕ Create New Post"):
+                new_title = st.text_input("Title")
+                new_content = st.text_area("What's on your mind, Doctor?")
+                if st.button("Post to Community"):
+                    if new_title and new_content:
+                        new_post = {
+                            "user": f"u/{user_name.replace(' ', '_')}", 
+                            "title": new_title, 
+                            "content": new_content, 
+                            "likes": 0, 
+                            "comments": []
+                        }
+                        st.session_state.community_posts.insert(0, new_post)
+                        st.success("Post published!"); st.rerun()
+
+            # 3. FILTER AND DISPLAY POSTS
+            filtered_posts = [p for p in st.session_state.community_posts if search_query.lower() in p['title'].lower() or search_query.lower() in p['content'].lower()]
+            
+            for idx, post in enumerate(filtered_posts):
+                st.markdown(f"""
+                    <div class="reddit-card">
+                        <div class="reddit-user">{post['user']} • {datetime.now().strftime('%H:%M')}</div>
+                        <div class="reddit-title">{post['title']}</div>
+                        <div class="reddit-content">{post['content']}</div>
+                        <div class="reddit-meta">
+                            <span>⬆️ {post['likes']} Karma</span>
+                            <span>💬 {len(post['comments'])} Comments</span>
+                        </div>
+                    </div>
+                """, unsafe_allow_html=True)
+                
+                # INTERACTION BUTTONS
+                b1, b2, _ = st.columns([1, 2, 6])
+                with b1:
+                    if st.button(f"Push ⬆️", key=f"like_{idx}"):
+                        post['likes'] += 1; st.rerun()
+                with b2:
+                    with st.expander(f"View {len(post['comments'])} Comments"):
+                        for c in post['comments']:
+                            st.markdown(f'<div class="comment-bubble">{c}</div>', unsafe_allow_html=True)
+                        new_com = st.text_input("Add comment...", key=f"com_in_{idx}", label_visibility="collapsed")
+                        if st.button("Post", key=f"com_btn_{idx}"):
+                            if new_com: post['comments'].append(new_com); st.rerun()
+
+        with c_right:
+            # 4. TRENDING SIDEBAR
+            st.markdown("### 🔥 Trending Topics")
+            trending = ["#Cardiology2026", "#AI_Diagnostics", "#MFLO_Updates", "#GrandRounds", "#MedicalResidency"]
+            for tag in trending:
+                if st.button(tag, use_container_width=True):
+                    # In a real app, this would trigger a filter
+                    pass
+            
+            st.divider()
+            st.markdown("### 🏆 Top Contributors")
+            st.markdown("""
+                * **u/Cardio_Lead** (2.4k Karma)
+                * **u/Radiology_Pro** (1.8k Karma)
+                * **u/Heart_Monitor** (950 Karma)
+            """)
+
+    elif st.session_state.current_page == "Reservation": st.title("📅 Reservations"); st.table(RESERVATIONS_DB)
     elif st.session_state.current_page == "Messages": st.title("✉️ Messages"); st.write(MESSAGES_DB)
