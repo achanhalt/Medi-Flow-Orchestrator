@@ -362,44 +362,92 @@ else:
 
                 if st.session_state.get('consult_active'):
                     st.divider()
-                    st.subheader("Consultation Notes")
-                    with st.container(border=True):
-                        consult_text = st.text_area("Observations, Symptoms & Plan", height=200)
-                        
-                        col_ai, col_save = st.columns(2)
-                        with col_ai:
-                            if st.button("Analyze with AI 🤖"):
+                    st.subheader("Consultation & AI Assistant")
+                    
+                    # Layout: Notes on left, AI Chat on right
+                    c_notes, c_ai = st.columns([1, 1])
+                    
+                    with c_notes:
+                        consult_text = st.text_area("Observations, Symptoms & Plan", height=250, placeholder="Type patient symptoms here...")
+                        if st.button("Generate AI Insights 🤖", use_container_width=True):
+                            if consult_text:
+                                # Simple AI Logic
                                 notes_low = consult_text.lower()
-                                st.session_state.temp_meds = []
-                                st.session_state.temp_tests = []
-                                if "fever" in notes_low: st.session_state.temp_meds.append("Paracetamol 500mg")
-                                if "chest" in notes_low: st.session_state.temp_tests.append("Chest X-Ray")
+                                suggestions = []
+                                tests = []
+                                
+                                if "fever" in notes_low: 
+                                    suggestions.append("Paracetamol 500mg TDS")
+                                    tests.append("Full Blood Count (FBC)")
+                                if "chest" in notes_low or "cough" in notes_low:
+                                    suggestions.append("Bromhexine Syrup 10ml")
+                                    tests.append("Chest X-Ray")
+                                
+                                # Store for the Chat Box
+                                st.session_state.ai_reply = {
+                                    "text": f"Based on the symptoms of '{consult_text[:30]}...', I recommend the following clinical path.",
+                                    "meds": suggestions,
+                                    "tests": tests
+                                }
+                                st.rerun()
+
+                    with c_ai:
+                        # --- AI CHAT BOX UI ---
+                        st.markdown("**AI Clinical Assistant**")
+                        chat_container = st.container(height=250, border=True)
                         
-                        if 'temp_meds' in st.session_state:
-                            final_meds = [m for m in st.session_state.temp_meds if st.checkbox(m, value=True)]
-                            
-                            act1, act2 = st.columns(2)
-                            with act1:
-                                if st.button("🚨 Create Referral"):
-                                    st.session_state.referral_draft = {"ic": ic_input, "reason": consult_text}
-                                    st.session_state.current_page = "Reservation"
-                                    st.rerun()
-                            with act2:
-                                if st.button("Save & Sync to Server", type="primary"):
-                                    new_log = {
-                                        "No": len(p_data['history_logs']) + 1,
-                                        "Date": str(date.today()),
-                                        "Condition": consult_text[:20] + "...",
-                                        "Test": ", ".join(st.session_state.temp_tests) if st.session_state.temp_tests else "None",
-                                        "Medicine": ", ".join(final_meds) if final_meds else "None",
-                                        "Dr": "Dr. John Doe",
-                                        "Status": "Completed"
-                                    }
-                                    p_data['history_logs'].append(new_log)
-                                    p_data['last_visit'] = str(date.today())
-                                    st.session_state.consult_active = False
-                                    st.balloons()
-                                    st.rerun()
+                        if 'ai_reply' in st.session_state:
+                            with chat_container:
+                                # AI "Avatar" and Reply
+                                st.markdown(f"""
+                                <div style="display: flex; align-items: flex-start; margin-bottom: 10px;">
+                                    <div style="background: #E1F5FE; padding: 10px; border-radius: 15px; border-bottom-left-radius: 2px; color: #01579B; font-size: 14px;">
+                                        🤖 <b>M-FLO AI:</b><br>{st.session_state.ai_reply['text']}
+                                    </div>
+                                </div>
+                                """, unsafe_allow_html=True)
+                                
+                                if st.session_state.ai_reply['meds']:
+                                    st.markdown("🔍 **Suggested Meds:**")
+                                    for m in st.session_state.ai_reply['meds']:
+                                        st.code(m, language=None)
+                        else:
+                            chat_container.info("Awaiting clinical notes to provide insights...")
+
+                    # --- FINAL ACTIONS ---
+                    if 'ai_reply' in st.session_state:
+                        st.markdown("---")
+                        st.write("Confirm AI suggestions to update patient history:")
+                        
+                        # Selection of AI findings
+                        final_meds = []
+                        for m in st.session_state.ai_reply['meds']:
+                            if st.checkbox(f"Approve {m}", value=True):
+                                final_meds.append(m)
+                                
+                        act1, act2 = st.columns(2)
+                        with act1:
+                            if st.button("🚨 Create Specialist Referral", use_container_width=True):
+                                st.session_state.referral_draft = {"ic": ic_input, "reason": consult_text}
+                                st.session_state.current_page = "Reservation"
+                                st.rerun()
+                        with act2:
+                            if st.button("✅ Save & Sync to History", type="primary", use_container_width=True):
+                                new_log = {
+                                    "No": len(p_data['history_logs']) + 1,
+                                    "Date": str(date.today()),
+                                    "Condition": consult_text[:25] + "...",
+                                    "Test": ", ".join(st.session_state.ai_reply['tests']) if st.session_state.ai_reply['tests'] else "None",
+                                    "Medicine": ", ".join(final_meds) if final_meds else "None",
+                                    "Dr": "Dr. John Doe",
+                                    "Status": "Completed"
+                                }
+                                p_data['history_logs'].append(new_log)
+                                # Cleanup
+                                st.session_state.consult_active = False
+                                del st.session_state.ai_reply
+                                st.balloons()
+                                st.rerun()
             
             else:
                 st.error("❌ No record found for this IC. Please register the new patient below.")
