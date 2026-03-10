@@ -271,7 +271,6 @@ else:
                         if st.button("Delete 🗑️", key=f"del_btn_{idx}"):
                             st.session_state[f"confirm_del_{idx}"] = True
                     
-                    # --- NEW: CONFIRM DELETE POPUP ---
                     if st.session_state.get(f"confirm_del_{idx}", False):
                         st.warning("⚠️ Are you sure you want to delete this post?")
                         col_y, col_n = st.columns([1, 4])
@@ -296,8 +295,23 @@ else:
             trending = ["#Cardiology2026", "#AI_Diagnostics", "#MFLO_Updates"]
             for tag in trending: st.button(tag, use_container_width=True)
             st.divider()
+            
+            # --- MODIFIED: TOP CONTRIBUTORS SECTION ---
             st.markdown("### 🏆 Top Contributors")
-            st.markdown("* **u/Cardio_Lead** (2.4k Karma)\n* **u/Radiology_Pro** (1.8k Karma)")
+            contributors = [
+                {"name": "Dr. Phang Lee You", "role": "Senior Consultant Cardiologist", "karma": "2.4k"},
+                {"name": "Dr. Sarah Smith", "role": "Head of Radiology", "karma": "1.8k"},
+                {"name": "Dr. Robert Chen", "role": "Internal Medicine Specialist", "karma": "950"}
+            ]
+            
+            for person in contributors:
+                st.markdown(f"""
+                    <div style="background: white; border: 1px solid #EDEFF1; border-radius: 8px; padding: 10px; margin-bottom: 8px;">
+                        <div style="font-weight: 700; color: #124D41; font-size: 14px;">{person['name']}</div>
+                        <div style="font-size: 12px; color: #787C7E; font-style: italic; margin-bottom: 4px;">{person['role']}</div>
+                        <div style="font-size: 11px; color: #93C572; font-weight: 800;">{person['karma']} Karma Points</div>
+                    </div>
+                """, unsafe_allow_html=True)
 
     elif st.session_state.current_page == "Reservation": st.title("📅 Reservations"); st.table(RESERVATIONS_DB)
     elif st.session_state.current_page == "Messages": st.title("✉️ Messages"); st.write(MESSAGES_DB)
