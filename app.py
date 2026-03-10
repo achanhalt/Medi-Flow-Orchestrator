@@ -74,23 +74,11 @@ if "notifications" not in st.session_state:
         {"type": "clinical", "text": "Lab Results: Patient Robert Chen did their blood test", "time": "3 hours ago", "unread": False}
     ]
 
-# --- UPDATED PATIENT DATABASE WITH ADDRESS, HEIGHT, WEIGHT, RECORDS ---
+# Patient Database (Mock) - Updated with new schema
 if "patient_db" not in st.session_state:
     st.session_state.patient_db = {
-        "950101-10-5543": {
-            "name": "Alice Tan", "age": 29, 
-            "address": "12, Jalan Ampang, Kuala Lumpur", 
-            "height": 165.0, "weight": 55.0, 
-            "history": "Asthma", "last_visit": "2026-01-12",
-            "records": ["2025-12-01: Seasonal flu treatment", "2026-01-12: Routine asthma checkup"]
-        },
-        "880520-14-6678": {
-            "name": "Bob Smith", "age": 36, 
-            "address": "5, Street 4, Petaling Jaya", 
-            "height": 180.0, "weight": 82.0, 
-            "history": "Type 2 Diabetes", "last_visit": "2026-02-28",
-            "records": ["2026-02-28: HbA1c review"]
-        }
+        "950101-10-5543": {"name": "Alice Tan", "dob": "1995-01-01", "age": 31, "height": 162.0, "weight": 55.0, "history": "Asthma", "last_visit": "2026-01-12"},
+        "880520-14-6678": {"name": "Bob Smith", "dob": "1988-05-20", "age": 37, "height": 175.0, "weight": 82.0, "history": "Type 2 Diabetes", "last_visit": "2026-02-28"}
     }
 
 if "following_list" not in st.session_state:
@@ -175,7 +163,6 @@ st.markdown(f"""
     .cert-tag {{ background: #E8F5E9; color: #2E7D32; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 600; margin: 4px; display: inline-block; border: 1px solid #C8E6C9; }}
     .alert-card {{ background: #FFF5F5; border-left: 5px solid #E57373; padding: 15px; border-radius: 12px; margin-bottom: 10px; }}
     .todo-item {{ background:#F1F8E9; padding:12px; border-radius:12px; border-left:5px solid #93C572; margin-bottom:10px; }}
-    .record-entry {{ background:#f9f9f9; padding:10px; border-radius:8px; margin-bottom:8px; font-size:13px; border-left: 3px solid #93C572; color: #444; }}
 
     .notif-card {{
         background: white; border-radius: 12px; padding: 15px; margin-bottom: 10px;
@@ -311,7 +298,7 @@ else:
                         st.session_state.daily_tasks[selected_date].pop(i)
                         st.session_state.completed_counts[selected_date] += 1; st.rerun()
 
-    # --- PAGE: PATIENT SEARCH (UPDATED WITH ADDRESS, HEIGHT, WEIGHT, RECORDS) ---
+    # --- PAGE: PATIENT SEARCH ---
     elif st.session_state.current_page == "Patient":
         st.title("👥 Patient Clinical Records")
         st.markdown("Search the hospital database to begin a new consultation session.")
@@ -323,75 +310,83 @@ else:
                 p_data = st.session_state.patient_db[ic_input]
                 st.success(f"✅ Record Found for {p_data['name']}")
                 
+                # --- UPDATED: Vitals & BMI Calculation ---
+                h_m = p_data.get('height', 0) / 100
+                w_kg = p_data.get('weight', 0)
+                bmi = round(w_kg / (h_m**2), 1) if h_m > 0 else 0
+                
                 c_data1, c_data2 = st.columns([1, 2])
                 with c_data1:
-                    st.subheader("Biological & Contact Data")
-                    # Address, Height, and Weight are editable
-                    new_addr = st.text_area("Address", value=p_data['address'])
-                    h_col, w_col = st.columns(2)
-                    with h_col: new_h = st.number_input("Height (cm)", value=float(p_data['height']), step=0.1)
-                    with w_col: new_w = st.number_input("Weight (kg)", value=float(p_data['weight']), step=0.1)
-                    
-                    if st.button("Update Profile Information"):
-                        p_data['address'] = new_addr
-                        p_data['height'] = new_h
-                        p_data['weight'] = new_w
-                        st.success("Physical and contact data updated successfully.")
-
                     st.markdown(f"""
-                    <div style="background:white; padding:20px; border-radius:15px; border:1px solid #E0E0E0; margin-top:15px;">
-                        <h4 style="color:#124D41; margin-top:0;">Background History</h4>
-                        <p><strong>IC:</strong> {ic_input}</p>
+                    <div style="background:white; padding:20px; border-radius:15px; border:1px solid #E0E0E0; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+                        <h4 style="color:#124D41; margin-top:0;">Patient Info</h4>
+                        <p><strong>Name:</strong> {p_data['name']}<br>
+                        <strong>Age:</strong> {p_data['age']} yrs<br>
+                        <strong>DOB:</strong> {p_data.get('dob', 'N/A')}<br>
+                        <strong>IC:</strong> {ic_input}</p>
+                        <hr>
+                        <p style="margin-bottom:5px;"><strong>Vitals & Physical:</strong></p>
+                        <div style="display:flex; justify-content:space-between; background:#F1F8E9; padding:10px; border-radius:10px; font-size:13px;">
+                            <span>H: <b>{p_data.get('height', '--')} cm</b></span>
+                            <span>W: <b>{p_data.get('weight', '--')} kg</b></span>
+                            <span style="color:#2E7D32;">BMI: <b>{bmi}</b></span>
+                        </div>
+                        <hr>
                         <p><strong>Medical History:</strong><br><small>{p_data['history']}</small></p>
                         <p><strong>Last Visit:</strong> {p_data.get('last_visit', 'N/A')}</p>
                     </div>
                     """, unsafe_allow_html=True)
                 
                 with c_data2:
-                    st.subheader("Previous Medical Records")
-                    if "records" in p_data and p_data["records"]:
-                        for rec in p_data["records"]:
-                            st.markdown(f'<div class="record-entry">{rec}</div>', unsafe_allow_html=True)
-                    else:
-                        st.info("No historical records available.")
-
-                    st.divider()
-                    st.subheader("New Consultation")
+                    st.subheader("Consultation Notes")
                     consult_text = st.text_area("Observations, Symptoms & Plan", height=200)
-                    if st.button("Finalize & Sync to Server"):
+                    if st.button("Save & Sync to Server"):
                         if consult_text:
-                            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M")
-                            new_entry = f"{timestamp}: {consult_text}"
-                            p_data['records'].append(new_entry)
-                            p_data['last_visit'] = str(date.today())
+                            st.session_state.patient_db[ic_input]['last_visit'] = str(date.today())
                             st.balloons()
-                            st.success("Clinical notes have been encrypted and saved.")
-                            st.rerun()
+                            st.success("Clinical notes have been encrypted and saved to the patient's record.")
                         else:
                             st.warning("Please enter notes before saving.")
             
             else:
                 st.error("❌ No record found for this IC. Please register the new patient below.")
+                
+                # --- UPDATED: Registration Form with Auto-Age & Birthdate ---
                 with st.form("registration_form"):
                     st.subheader("New Patient Registration")
                     reg_name = st.text_input("Full Name (as per IC)")
-                    reg_addr = st.text_area("Home Address")
-                    r_col1, r_col2, r_col3 = st.columns(3)
-                    with r_col1: reg_age = st.number_input("Age", min_value=0, max_value=120)
-                    with r_col2: reg_h = st.number_input("Height (cm)", value=170.0)
-                    with r_col3: reg_w = st.number_input("Weight (kg)", value=65.0)
                     
+                    r_col1, r_col2 = st.columns(2)
+                    with r_col1:
+                        reg_dob = st.date_input("Birthdate", min_value=date(1900, 1, 1), max_value=date.today(), value=date(2000, 1, 1))
+                        # Logic: Age calculation
+                        today = date.today()
+                        calc_age = today.year - reg_dob.year - ((today.month, today.day) < (reg_dob.month, reg_dob.day))
+                        st.caption(f"System will record age as: {calc_age}")
+                        
+                    with r_col2:
+                        reg_gender = st.selectbox("Gender", ["Male", "Female", "Other"])
+
+                    r_col3, r_col4 = st.columns(2)
+                    with r_col3:
+                        reg_height = st.number_input("Height (cm)", min_value=0.0, max_value=250.0, value=170.0, step=0.1)
+                    with r_col4:
+                        reg_weight = st.number_input("Weight (kg)", min_value=0.0, max_value=300.0, value=70.0, step=0.1)
+
                     reg_history = st.text_area("Known Allergies & Medical History")
                     
                     if st.form_submit_button("Create Patient Record"):
                         if reg_name:
                             st.session_state.patient_db[ic_input] = {
-                                "name": reg_name, "age": reg_age, "address": reg_addr,
-                                "height": reg_h, "weight": reg_w, "history": reg_history, 
-                                "records": [f"Registered on {date.today()}"],
+                                "name": reg_name, 
+                                "dob": str(reg_dob),
+                                "age": calc_age, 
+                                "height": reg_height,
+                                "weight": reg_weight,
+                                "history": reg_history, 
                                 "last_visit": "Registered Today"
                             }
-                            st.success(f"Account created successfully! Re-enter IC to begin consultation.")
+                            st.success(f"Account for {reg_name} created successfully! Re-enter IC to begin consultation.")
                             st.rerun()
 
     # --- PAGE: NOTIFICATIONS ---
@@ -544,5 +539,4 @@ else:
     # --- PAGE: RESERVATION ---
     elif st.session_state.current_page == "Reservation": 
         st.title("📅 Reservations")
-        
         st.table(RESERVATIONS_DB)
