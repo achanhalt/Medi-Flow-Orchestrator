@@ -13,7 +13,7 @@ st.set_page_config(
 
 # 2. GLOBAL DATA & VARIABLES (PRESERVED)
 user_name = "Dr. John Doe"
-user_role = "Consultant Physician" # Added role for current user
+user_role = "Consultant Physician" 
 
 GITHUB_RAW_URL = "https://raw.githubusercontent.com/your-username/your-repo/main/doctor_profile.jpg" 
 
@@ -30,7 +30,6 @@ DOCTOR_BIO = {
     ]
 }
 
-# UPDATED: Changed u/ handles to real Doctor names and Roles
 if "community_posts" not in st.session_state:
     st.session_state.community_posts = [
         {"user": "Dr. Phang Lee You", "role": "Senior Consultant Cardiologist", "title": "Hypertension resistance protocols", "content": "Recent studies suggest that double-blocking RAAS might be more effective in Stage 2 patients...", "likes": 42, "comments": ["Very insightful!", "What about ACEi side effects?"]},
@@ -38,7 +37,15 @@ if "community_posts" not in st.session_state:
         {"user": "Dr. Robert Chen", "role": "Internal Medicine Specialist", "title": "AI in Chest X-Rays", "content": "New algorithm for detecting small pleural effusions showing 98% accuracy.", "likes": 89, "comments": ["Is this FDA approved?"]}
     ]
 
-# NEW: Follower State (PRESERVED)
+# NEW: Notifications Database (Replaces Messages)
+if "notifications" not in st.session_state:
+    st.session_state.notifications = [
+        {"type": "community", "text": "Dr. Sarah Smith has replied on your post in community", "time": "2 mins ago", "unread": True},
+        {"type": "clinical", "text": "Patient James Wilson has completed their X-ray", "time": "15 mins ago", "unread": True},
+        {"type": "clinical", "text": "Patient Maria Garcia has claimed their medications from pharmacy", "time": "1 hour ago", "unread": False},
+        {"type": "clinical", "text": "Lab Results: Patient Robert Chen did their blood test", "time": "3 hours ago", "unread": False}
+    ]
+
 if "following_list" not in st.session_state:
     st.session_state.following_list = set()
 
@@ -46,11 +53,6 @@ RESERVATIONS_DB = [
     {"Time": "09:00 AM", "Patient": "Alice Tan", "Status": "Confirmed"},
     {"Time": "11:30 AM", "Patient": "Bob Smith", "Status": "Pending"}
 ]
-
-MESSAGES_DB = {
-    "Dr. Sarah Smith": ["Hello Doctor, regarding the lab results...", "I've updated the patient chart."],
-    "Nurse Mike": ["Patient in Room 402 is ready for rounds.", "Vitals are stable."]
-}
 
 # 3. FILE ENCODING (PRESERVED)
 def get_base64_from_url(url):
@@ -92,7 +94,7 @@ if "daily_tasks" not in st.session_state:
 if "completed_counts" not in st.session_state:
     st.session_state.completed_counts = {}
 
-# 5. CSS (PRESERVED)
+# 5. CSS (PRESERVED + NEW NOTIFICATION STYLES)
 st.markdown(f"""
     <style>
     @keyframes fadeIn {{ from {{ opacity: 0; transform: translateY(20px); }} to {{ opacity: 1; transform: translateY(0); }} }}
@@ -126,6 +128,18 @@ st.markdown(f"""
     .cert-tag {{ background: #E8F5E9; color: #2E7D32; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 600; margin: 4px; display: inline-block; border: 1px solid #C8E6C9; }}
     .alert-card {{ background: #FFF5F5; border-left: 5px solid #E57373; padding: 15px; border-radius: 12px; margin-bottom: 10px; }}
     .todo-item {{ background:#F1F8E9; padding:12px; border-radius:12px; border-left:5px solid #93C572; margin-bottom:10px; }}
+
+    /* NOTIFICATION SPECIFIC CSS */
+    .notif-card {
+        background: white; border-radius: 12px; padding: 15px; margin-bottom: 10px;
+        border-left: 5px solid #E0E0E0; display: flex; align-items: center; gap: 15px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05); transition: transform 0.2s ease;
+    }
+    .notif-card:hover { transform: translateX(5px); }
+    .notif-unread { border-left-color: #93C572 !important; background: #F9FFF9; }
+    .notif-icon { font-size: 20px; }
+    .notif-text { flex-grow: 1; font-size: 14px; color: #333; }
+    .notif-time { font-size: 11px; color: #888; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -142,7 +156,6 @@ if not st.session_state.auth:
             if u == "doctor1" and p == "mediflow2026":
                 st.session_state.auth = True; st.rerun()
 else:
-    # --- PHYSICIAN LOGIC --- (PRESERVED)
     today_str = date.today().strftime("%Y-%m-%d")
     current_tasks = st.session_state.daily_tasks.get(today_str, [])
     count_patients = sum(1 for task in current_tasks if any(x in task.lower() for x in ["patient", "consult"]))
@@ -153,7 +166,12 @@ else:
         st.divider()
         if st.button("🏠 Homepage", key="nav_h", use_container_width=True): st.session_state.current_page = "Homepage"
         if st.button("📅 Reservation", key="nav_r", use_container_width=True): st.session_state.current_page = "Reservation"
-        if st.button("✉️ Messages", key="nav_m", use_container_width=True): st.session_state.current_page = "Messages"
+        
+        # UPDATED: Replaced Messages with Notifications + Unread Counter
+        unread_count = sum(1 for n in st.session_state.notifications if n['unread'])
+        btn_label = f"🔔 Notifications ({unread_count})" if unread_count > 0 else "🔔 Notifications"
+        if st.button(btn_label, key="nav_n", use_container_width=True): st.session_state.current_page = "Notifications"
+        
         if st.button("🤝 Community", key="nav_c", use_container_width=True): st.session_state.current_page = "Community"
         
         if st.session_state.following_list:
@@ -231,27 +249,42 @@ else:
                         st.session_state.daily_tasks[selected_date].pop(i)
                         st.session_state.completed_counts[selected_date] += 1; st.rerun()
 
+    # NEW PAGE: Notifications View
+    elif st.session_state.current_page == "Notifications":
+        st.title("🔔 Notifications")
+        if st.button("Clear all read notifications"):
+            st.session_state.notifications = [n for n in st.session_state.notifications if n['unread']]
+            st.rerun()
+            
+        for idx, n in enumerate(st.session_state.notifications):
+            unread_class = "notif-unread" if n['unread'] else ""
+            icon = "💬" if n['type'] == "community" else "🩺"
+            st.markdown(f"""
+                <div class="notif-card {unread_class}">
+                    <div class="notif-icon">{icon}</div>
+                    <div class="notif-text">{n['text']}</div>
+                    <div class="notif-time">{n['time']}</div>
+                </div>
+            """, unsafe_allow_html=True)
+            if n['unread']:
+                if st.button(f"Mark as read", key=f"read_{idx}"):
+                    n['unread'] = False; st.rerun()
+
     elif st.session_state.current_page == "Community":
         st.title("🤝 Medical Community")
-        
         c_left, c_right = st.columns([2.5, 1], gap="large")
-        
         with c_left:
             search_query = st.text_input("🔍 Search medical discussions...", placeholder="e.g. Hypertension, UI, AI")
-            
             with st.expander("➕ Create New Post"):
                 new_title = st.text_input("Title")
                 new_content = st.text_area("What's on your mind, Doctor?")
                 if st.button("Post to Community"):
                     if new_title and new_content:
-                        # UPDATED: Post now uses real user name and role
                         new_post = {"user": user_name, "role": user_role, "title": new_title, "content": new_content, "likes": 0, "comments": []}
                         st.session_state.community_posts.insert(0, new_post); st.success("Post published!"); st.rerun()
 
             filtered_posts = [p for p in st.session_state.community_posts if search_query.lower() in p['title'].lower() or search_query.lower() in p['content'].lower()]
-            
             for idx, post in enumerate(filtered_posts):
-                # UPDATED: Display Name and Role instead of u/ ID
                 st.markdown(f"""
                     <div class="reddit-card">
                         <div class="reddit-user">{post['user']} ({post.get('role', 'Fellow')}) • Posted by Colleague</div>
@@ -274,9 +307,13 @@ else:
                             st.markdown(f'<div class="comment-bubble">{c}</div>', unsafe_allow_html=True)
                         new_com = st.text_input("Add comment...", key=f"com_in_{idx}", label_visibility="collapsed")
                         if st.button("Post", key=f"com_btn_{idx}"):
-                            if new_com: post['comments'].append(new_com); st.rerun()
-                
-                # PRESERVED: Ownership check updated for real name
+                            if new_com: 
+                                post['comments'].append(new_com)
+                                # SIMULATED NOTIFICATION TRIGGER
+                                if post['user'] == user_name:
+                                    st.session_state.notifications.insert(0, {"type": "community", "text": f"Someone has replied on your post: '{new_com[:20]}...'", "time": "Just now", "unread": True})
+                                st.rerun()
+
                 if post['user'] == user_name:
                     with b3:
                         if st.button("Edit 📝", key=f"edit_btn_{idx}"):
@@ -341,4 +378,3 @@ else:
                         st.rerun()
 
     elif st.session_state.current_page == "Reservation": st.title("📅 Reservations"); st.table(RESERVATIONS_DB)
-    elif st.session_state.current_page == "Messages": st.title("✉️ Messages"); st.write(MESSAGES_DB)
